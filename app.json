@@ -1,0 +1,47 @@
+{
+  "name": "yastation-app",
+  "displayName": "yastation-app",
+  "expo": {
+    "name": "yastation-app",
+    "slug": "yastation-app",
+    "sdkVersion": "39.0.0",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.wielski.yastation"
+    },
+    "ios": {
+      "bundleIdentifier": "com.wielski.yastation"
+    }
+  },
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "splash": {
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  },
+  "updates": {
+    "enabled": false,
+    "fallbackToCacheTimeout": 0
+  },
+  "assetBundlePatterns": [
+    "**/*"
+  ],
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.wielski.yastation"
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#FFFFFF"
+    },
+    "package": "com.wielski.yastation"
+  },
+  "web": {
+    "favicon": "./assets/favicon.png"
+  }
+}
