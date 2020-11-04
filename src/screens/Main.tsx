@@ -8,23 +8,41 @@ import { RootStackParamList } from '../Navigation';
 
 import AccessTokenStorage from '../Api/AccessTokenStorage';
 import { useSharedState } from '../store';
+import YandexMusicApi from '../Api/YandexMusicApi';
 
 type Props = StackScreenProps<RootStackParamList, 'Main'>;
 interface MainProps extends Props {
   sharedState: ReturnType<typeof useSharedState>,
 };
 
+const yandexMusicApi = new YandexMusicApi();
+
 export class Main extends Component<MainProps> {
   constructor(props: MainProps) {
     super(props);
+  }
+
+  public async getAccountMeta(): Promise<void> {
+    const [state, setState] = this.props.sharedState;
+
+    try {
+      const account = await yandexMusicApi.getAccount();
+      const likedTracks = await yandexMusicApi.getLikedTracks(account.id);
+
+      setState({ ...state, account, likedTracks });
+    } catch (e) {
+      // TODO: Process error
+    }
   }
 
   public processLogin(): void {
     const [state, setState] = this.props.sharedState;
     const navigation = this.props.navigation;
 
-    AccessTokenStorage.getToken().then((token) => {
+    AccessTokenStorage.getToken().then(async (token) => {
       if (token) {
+        await this.getAccountMeta();
+
         navigation.reset({
           index: 0,
           routes: [{ name: 'Dashboard' }],

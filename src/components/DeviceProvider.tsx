@@ -116,6 +116,19 @@ class DeviceProvider extends Component<DeviceProviderProps> {
       };
     }
 
+    if (deviceState && deviceState.extra && deviceState.extra.appState) {
+      try {
+        const appStateString = atob(deviceState.extra.appState);
+        const appState = JSON.parse(
+          appStateString.substring(appStateString.indexOf('{'), appStateString.lastIndexOf('}') + 1)
+        );
+
+        console.log(appState);
+      } catch (e) {
+        // TODO: Process error
+      }
+    }
+
     if (typeof deviceState === 'object') {
       const [state, setState] = this.props.sharedState;
       setState({ ...state, currentPlaying, deviceStatus: 'connected' });

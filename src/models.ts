@@ -1,3 +1,8 @@
+export type Account = {
+  id: number;
+  name: string;
+};
+
 export type Device = {
   activation_code: number;
   activation_region: string;
@@ -64,4 +69,5 @@ export type CurrentPlaying = {
   duration?: number;
   progress?: number;
   volume?: number;
+  id?: number;
 };

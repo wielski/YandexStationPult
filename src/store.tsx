@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createContainer } from 'react-tracked';
-import { Device, CurrentState, CurrentPlaying } from './models';
+import { Device, CurrentState, CurrentPlaying, Account } from './models';
 
 const initialState: {
   devices: Device[],
@@ -9,6 +9,9 @@ const initialState: {
   deviceState: Partial<CurrentState>,
   currentPlaying: CurrentPlaying,
   authToken: string | null,
+  //
+  account: Account | null,
+  likedTracks: number[],
 } = {
   devices: [],
   selectedDevice: null,
@@ -16,6 +19,9 @@ const initialState: {
   deviceState: {},
   currentPlaying: { hasState: false },
   authToken: null,
+  // account info
+  account: null,
+  likedTracks: [],
 };
 
 const useMyState = () => useState(initialState);
