@@ -4,11 +4,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Main from './screens/Main';
 import Login from './screens/Login';
 import Dashboard from './screens/Dashboard';
+import Playlists from './screens/Playlists';
 
 export type RootStackParamList = {
   Main: undefined;
   Login: undefined;
   Dashboard: undefined,
+  Playlists: undefined,
 };
 
 const Stack = createStackNavigator();
@@ -33,6 +35,11 @@ function RootStack() {
         name="Dashboard"
         component={Dashboard}
         options={{ title: 'Dashboard' }}
+      />
+      <Stack.Screen
+        name="Playlists"
+        component={Playlists}
+        options={{ title: 'Playlists' }}
       />
     </Stack.Navigator>
   );

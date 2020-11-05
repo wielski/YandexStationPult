@@ -1,7 +1,23 @@
 import AccessTokenStorage from './AccessTokenStorage';
-import { Account } from '../models';
+import { Account, Track, Playlist } from '../models';
 
 const API_BASE_URL = 'https://api.music.yandex.net/';
+
+const mapTrack = (track: any): Track => {
+  let subtitle: string = '';
+
+  if (track.artists && Array.isArray(track.artists)) {
+    subtitle = track.artists.map((a: any) => a.name).join(', ');
+  }
+
+  return {
+    id: track.id as number,
+    title: track.title as string,
+    subtitle: subtitle as string,
+    duration: track.durationMs as number,
+    cover: track.coverUri as string,
+  };
+}
 
 export default class YandexMusicApi {
   public async getAccount(): Promise<Account> {
@@ -13,7 +29,7 @@ export default class YandexMusicApi {
     };
   }
 
-  public async getLikedTracks(userId: number): Promise<number[]> {
+  public async getLikedTrackIds(userId: number): Promise<number[]> {
     const likesTracks = await this.get(`/users/${userId}/likes/tracks?if-modified-since-revision=0`);
 
     return likesTracks.library.tracks.map((track: { id: string }) => parseInt(track.id, 10));
@@ -25,6 +41,42 @@ export default class YandexMusicApi {
 
   public async dislikeTrack(userId: number, trackId: number): Promise<void> {
     await this.post(`/users/${userId}/likes/tracks/remove`, `track-ids=${trackId}`);
+  }
+
+  public async searchTracks(query: string): Promise<Track[]> {
+    const response = await this.get(`/search?text=${query}&nocorrect=true&type=track&page=0&playlist-in-best=false`);
+    
+    if (Array.isArray(response.tracks.results)) {
+      return response.tracks.results.map(mapTrack);
+    }
+
+    return [];
+  }
+
+  public async getLikedTracks(userId: number): Promise<Track[]> {
+    const response = await this.get(`/users/${userId}/playlists/3`);
+
+    if (Array.isArray(response.tracks)) {
+      return response.tracks.map((t: any) => mapTrack(t.track));
+    }
+
+    return [];
+  }
+
+  public async getPlaylists(userId: number): Promise<Playlist[]> {
+    const playlists = await this.get(`/users/${userId}/playlists/list`);
+
+    if (Array.isArray(playlists)) {
+      return playlists.map((playlist: any): Playlist => {
+        return {
+          id: playlist.uid,
+          name: playlist.title,
+          cover: playlist.ogImage,
+        };
+      });
+    }
+
+    return [];
   }
 
   private async post(path: string, payload: string): Promise<any> {

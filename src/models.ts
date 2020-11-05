@@ -71,3 +71,18 @@ export type CurrentPlaying = {
   volume?: number;
   id?: number;
 };
+
+export type Playlist = {
+  id: number;
+  kind: number;
+  name: string;
+  cover: string;
+};
+
+export type Track = {
+  id: number;
+  title: string;
+  subtitle: string;
+  duration: number;
+  cover: string;
+};

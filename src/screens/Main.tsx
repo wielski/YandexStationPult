@@ -32,7 +32,7 @@ export class Main extends Component<MainProps> {
         return false;
       }
 
-      const likedTracks = await yandexMusicApi.getLikedTracks(account.id);
+      const likedTracks = await yandexMusicApi.getLikedTrackIds(account.id);
 
       setState({ ...state, account, likedTracks });
     } catch (e) {
