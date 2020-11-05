@@ -22,33 +22,52 @@ export class Main extends Component<MainProps> {
     super(props);
   }
 
-  public async getAccountMeta(): Promise<void> {
+  public async getAccountMeta(): Promise<boolean> {
     const [state, setState] = this.props.sharedState;
 
     try {
       const account = await yandexMusicApi.getAccount();
+
+      if (!account.id) {
+        return false;
+      }
+
       const likedTracks = await yandexMusicApi.getLikedTracks(account.id);
 
       setState({ ...state, account, likedTracks });
     } catch (e) {
+      return false;
       // TODO: Process error
     }
+
+    return true;
   }
 
   public processLogin(): void {
-    const [state, setState] = this.props.sharedState;
     const navigation = this.props.navigation;
 
     AccessTokenStorage.getToken().then(async (token) => {
       if (token) {
-        await this.getAccountMeta();
+        const checkProfile = await this.getAccountMeta();
+
+        if (!checkProfile) {
+          AccessTokenStorage.removeToken();
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
+
+          return;
+        }
+
+        const [state, setState] = this.props.sharedState;
+        setState({ ...state, authToken: token });
 
         navigation.reset({
           index: 0,
           routes: [{ name: 'Dashboard' }],
         });
-
-        setState({ ...state, authToken: token });
       } else {
         navigation.reset({
           index: 0,
@@ -59,11 +78,13 @@ export class Main extends Component<MainProps> {
   }
 
   render() {
-    this.processLogin();
-
     return (
       <View style={styles.loading}><Spinner color="#ffdc5f" /></View>
     );
+  }
+
+  componentDidMount() {
+    this.processLogin();
   }
 }
 

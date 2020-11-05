@@ -84,7 +84,7 @@ export class Login extends Component<LoginProps> {
     });
   }
 
-  public successLogin(token: string): void {
+  public async successLogin(token: string): Promise<void> {
     const [state, setState] = this.props.sharedState;
     const navigation = this.props.navigation;
 
@@ -99,11 +99,11 @@ export class Login extends Component<LoginProps> {
     });;
     setState({ ...state, authToken: token });
 
-    AccessTokenStorage.setToken(token);
+    await AccessTokenStorage.setToken(token);
 
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Dashboard' }],
+      routes: [{ name: 'Main' }],
     });
   }
 

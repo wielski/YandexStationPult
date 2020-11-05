@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { View } from 'native-base';
+import { decode as Base64Decode } from 'base-64';
 
 import { useSharedState } from '../store';
-import { debounce } from '../helpers';
 import { CurrentPlaying, CurrentState, Device } from '../models';
 
 import GlagolApi from '../Api/GlagolApi';
@@ -101,32 +100,37 @@ class DeviceProvider extends Component<DeviceProviderProps> {
       hasState: false,
     };
 
+    let currentPlayingTrackId: number | undefined = undefined;
+
+    if (deviceState && deviceState.extra && deviceState.extra.appState) {
+      try {
+        const appStateString = Base64Decode(deviceState.extra.appState);
+        const appStateJson = appStateString.substring(appStateString.indexOf('{'), appStateString.lastIndexOf('"}') + 2);
+        const appState = JSON.parse(appStateJson);
+
+        if (appState && typeof appState === 'object' && appState.id) {
+          currentPlayingTrackId = appState.id;
+        }
+      } catch (e) {
+        // TODO: Process error
+      }
+    }
+
     if (deviceState && deviceState.state && deviceState.state.playerState) {
       const playerState = deviceState.state.playerState;
+      const extra = playerState.extra;
 
       currentPlaying = {
         hasState: true,
         playing: deviceState.state.playing,
-        cover: playerState.extra.coverURI ? `http://${playerState.extra.coverURI.replace(/%%/g, 'm1000x1000?webp=false')}` : '',
+        cover: extra && extra.coverURI ? `http://${extra.coverURI.replace(/%%/g, 'm1000x1000?webp=false')}` : '',
         title: playerState.title,
         subtitle: playerState.subtitle,
         duration: playerState.duration,
         progress: playerState.progress,
         volume: deviceState.state.volume,
+        id: currentPlayingTrackId,
       };
-    }
-
-    if (deviceState && deviceState.extra && deviceState.extra.appState) {
-      try {
-        const appStateString = atob(deviceState.extra.appState);
-        const appState = JSON.parse(
-          appStateString.substring(appStateString.indexOf('{'), appStateString.lastIndexOf('}') + 1)
-        );
-
-        console.log(appState);
-      } catch (e) {
-        // TODO: Process error
-      }
     }
 
     if (typeof deviceState === 'object') {
@@ -134,13 +138,12 @@ class DeviceProvider extends Component<DeviceProviderProps> {
       setState({ ...state, currentPlaying, deviceStatus: 'connected' });
     }
   }
-  setDeviceStateDebounce = debounce(this.setDeviceState, 2000, { isImmediate: true });
 
   componentDidMount(): void {
     YandexStation.on('connecting', this.connecting.bind(this));
     YandexStation.on('connected', this.connected.bind(this));
     YandexStation.on('disconnected', this.disconnected.bind(this));
-    YandexStation.on('state', this.setDeviceStateDebounce.bind(this));
+    YandexStation.on('state', this.setDeviceState.bind(this));
 
     this.loadDevices();
   }
@@ -149,18 +152,26 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     YandexStation.off('connecting', this.connecting.bind(this));
     YandexStation.off('connected', this.connected.bind(this));
     YandexStation.off('disconnected', this.disconnected.bind(this));
-    YandexStation.off('state', this.setDeviceStateDebounce.bind(this));
+    YandexStation.off('state', this.setDeviceState.bind(this));
   }
 
   render() {
     return (
-      <View>
-        {this.props.children}
-      </View>
+      this.props.children
     )
   }
 }
 
 export default (props: any) => {
-  return <DeviceProvider sharedState={useSharedState()} {...props} />;
+  const sharedState = useSharedState();
+
+  const trackState = () => {
+    for (const v of Object.values(sharedState[0])) {
+      v;
+    }
+  }
+
+  trackState();
+
+  return <DeviceProvider sharedState={sharedState} {...props} />;
 };

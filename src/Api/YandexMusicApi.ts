@@ -5,7 +5,7 @@ const API_BASE_URL = 'https://api.music.yandex.net/';
 
 export default class YandexMusicApi {
   public async getAccount(): Promise<Account> {
-    const accountStatus = await this.get('account/status');
+    const accountStatus = await this.get('/account/status');
 
     return {
       id: accountStatus.account.uid,
@@ -20,31 +20,31 @@ export default class YandexMusicApi {
   }
 
   public async likeTrack(userId: number, trackId: number): Promise<void> {
-    await this.post(`/users/${userId}/likes/tracks/add-multiple`, {
-      'track-ids': [trackId],
-    });
+    await this.post(`/users/${userId}/likes/tracks/add-multiple`, `track-ids=${trackId}`);
   }
 
   public async dislikeTrack(userId: number, trackId: number): Promise<void> {
-    await this.post(`/users/${userId}/likes/tracks/remove`, {
-      'track-ids': [trackId],
-    });
+    await this.post(`/users/${userId}/likes/tracks/remove`, `track-ids=${trackId}`);
   }
 
-  private async post(path: string, payload: object): Promise<any> {
+  private async post(path: string, payload: string): Promise<any> {
     const token = await AccessTokenStorage.getToken();
 
     return fetch(`${API_BASE_URL}/${path}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Oauth ${token}`,
+        'Authorization': `OAuth ${token}`,
         'X-Yandex-Music-Client': 'YandexMusicAndroid',
-        'Content-Type': 'application/json',
+        'User-Agent': 'Yandex-Music-API',
       },
-      body: JSON.stringify(payload),
+      body: payload,
     }).then(async (resp) => {
-      const json = await resp.json();
-      return json.result;
+      if (resp.ok) {
+        const json = await resp.json();
+        return json.result;
+      }
+
+      throw new Error(`Error ${resp.status}`);
     });
   }
 
@@ -54,12 +54,17 @@ export default class YandexMusicApi {
     return fetch(`${API_BASE_URL}/${path}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Oauth ${token}`,
+        'Authorization': `OAuth ${token}`,
         'X-Yandex-Music-Client': 'YandexMusicAndroid',
+        'User-Agent': 'Yandex-Music-API',
       },
     }).then(async (resp) => {
-      const json = await resp.json();
-      return json.result;
+      if (resp.ok) {
+        const json = await resp.json();
+        return json.result;
+      }
+
+      throw new Error(`Error ${resp.status}`);
     });
   }
 }

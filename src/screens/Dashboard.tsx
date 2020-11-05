@@ -2,20 +2,23 @@ import React, { Component } from 'react';
 
 import { StyleSheet, View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../Navigation';
-
-import Header from '../components/Header';
-import { useSharedState } from '../store';
-import YandexStation from '../Api/YandexStation';
 import { Button, Icon } from 'native-base';
 import SeekBar from '../components/SeekBar';
+import { StackScreenProps } from '@react-navigation/stack';
+
+import { RootStackParamList } from '../Navigation';
+import { useSharedState } from '../store';
+
+import Header from '../components/Header';
+import YandexStation from '../Api/YandexStation';
+import YandexMusicApi from '../Api/YandexMusicApi';
 
 type Props = StackScreenProps<RootStackParamList, 'Dashboard'>;
 interface DashboardProps extends Props {
   sharedState: ReturnType<typeof useSharedState>,
 };
+
+const yandexMusicApi = new YandexMusicApi();
 
 export class Dashboard extends Component<DashboardProps> {
   constructor(props: DashboardProps) {
@@ -53,18 +56,45 @@ export class Dashboard extends Component<DashboardProps> {
     });
   }
 
-  public like(): void {
-    YandexStation.sendCommand({
-      command: 'sendText',
-      text: 'Поставь лайк'
-    });
+  public async like(id: number): Promise<void> {
+    const [state, setState] = this.props.sharedState
+    if (!state.account) return;
+
+    try {
+      await yandexMusicApi.likeTrack(state.account.id, id);
+
+      const likedTracks = [...state.likedTracks];
+      likedTracks.push(id);
+
+      setState({ ...state, likedTracks });
+    } catch (e) {
+      // TODO: Process error
+    }
   }
 
-  public dislike(): void {
-    YandexStation.sendCommand({
-      command: 'sendText',
-      text: 'Поставь дизлайк'
-    });
+  public async dislike(id: number): Promise<void> {
+    const [state, setState] = this.props.sharedState
+    if (!state.account) return;
+
+    try {
+      await yandexMusicApi.dislikeTrack(state.account.id, id);
+
+      const likedTracks = [...state.likedTracks];
+      const likedTrackIndex = likedTracks.indexOf(id);
+
+      if (likedTrackIndex > -1) {
+        likedTracks.splice(likedTrackIndex, 1);
+        setState({ ...state, likedTracks });
+      }
+    } catch (e) {
+      // TODO: Process error
+    }
+  }
+
+  public isLiked(id: number): boolean {
+    const [state] = this.props.sharedState;
+
+    return Array.isArray(state.likedTracks) && state.likedTracks.includes(id);
   }
 
   render() {
@@ -93,12 +123,15 @@ export class Dashboard extends Component<DashboardProps> {
                   <Text style={styles.subtitle}>{currentPlaying.subtitle}</Text>
                 </View>
                 <View style={styles.favoriteControl}>
-                  <Button onPress={() => this.dislike()} style={styles.dislikeButton} small>
-                    <Icon style={styles.dislikeButtonIcon} name="heart-dislike" />
-                  </Button>
-                  <Button onPress={() => this.like()} style={styles.likeButton} small>
-                    <Icon style={styles.likeButtonIcon} name="heart" />
-                  </Button>
+                  { this.isLiked(currentPlaying.id as number) ?
+                    <Button onPress={() => this.dislike(currentPlaying.id as number)} style={styles.dislikeButton} small>
+                      <Icon style={styles.dislikeButtonIcon} name="heart-dislike" />
+                    </Button>
+                    :
+                    <Button onPress={() => this.like(currentPlaying.id as number)} style={styles.likeButton} small>
+                      <Icon style={styles.likeButtonIcon} name="heart" />
+                    </Button>
+                  }
                 </View>
                 <View style={styles.seek}>
                   <SeekBar
@@ -218,7 +251,6 @@ const styles = StyleSheet.create({
   },
   dislikeButton: {
     backgroundColor: 'transparent',
-    marginRight: 10,
   },
   dislikeButtonIcon: {
     color: '#000000',
