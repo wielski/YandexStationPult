@@ -91,10 +91,11 @@ export class Dashboard extends Component<DashboardProps> {
     }
   }
 
-  public isLiked(id: number): boolean {
+  public isLiked(id: string): boolean {
     const [state] = this.props.sharedState;
+    const intId = parseInt(id, 10);
 
-    return Array.isArray(state.likedTracks) && state.likedTracks.includes(id);
+    return Array.isArray(state.likedTracks) && [...state.likedTracks].includes(intId);
   }
 
   render() {
@@ -123,13 +124,13 @@ export class Dashboard extends Component<DashboardProps> {
                   <Text style={styles.subtitle}>{currentPlaying.subtitle}</Text>
                 </View>
                 <View style={styles.favoriteControl}>
-                  { this.isLiked(currentPlaying.id as number) ?
+                  { this.isLiked(String(currentPlaying.id)) ?
                     <Button onPress={() => this.dislike(currentPlaying.id as number)} style={styles.dislikeButton} small>
-                      <Icon style={styles.dislikeButtonIcon} name="heart-dislike" />
+                      <Icon style={styles.dislikeButtonIcon} name="heart" />
                     </Button>
                     :
                     <Button onPress={() => this.like(currentPlaying.id as number)} style={styles.likeButton} small>
-                      <Icon style={styles.likeButtonIcon} name="heart" />
+                      <Icon style={styles.likeButtonIcon} name="heart-empty" />
                     </Button>
                   }
                 </View>
@@ -246,14 +247,14 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   likeButtonIcon: {
-    color: '#f50e0a',
+    color: '#000000',
     fontSize: 18,
   },
   dislikeButton: {
     backgroundColor: 'transparent',
   },
   dislikeButtonIcon: {
-    color: '#000000',
+    color: '#f50e0a',
     fontSize: 18,
   },
   noPlaying: {
