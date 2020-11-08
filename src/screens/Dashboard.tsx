@@ -144,20 +144,20 @@ export class Dashboard extends Component<DashboardProps> {
                 </View>
                 <View style={styles.control}>
                   <Button onPress={() => this.prev()} style={styles.controlButton} large>
-                    <Icon style={styles.controlIcon} name="arrow-back" />
+                    <Icon style={styles.controlIcon} name="ios-arrow-back" />
                   </Button>
                   {!currentPlaying.playing &&
                     <Button onPress={() => this.play()} style={styles.controlButton} large>
-                      <Icon style={styles.playPauseIcon} name="play" />
+                      <Icon style={styles.playPauseIcon} name="ios-play" />
                     </Button>
                   }
                   {currentPlaying.playing &&
                     <Button onPress={() => this.stop()} style={styles.controlButton} large>
-                      <Icon style={styles.playPauseIcon} name="pause" />
+                      <Icon style={styles.playPauseIcon} name="ios-pause" />
                     </Button>
                   }
                   <Button onPress={() => this.next()} style={styles.controlButton}large>
-                    <Icon style={styles.controlIcon} name="arrow-forward" />
+                    <Icon style={styles.controlIcon} name="ios-arrow-forward" />
                   </Button>
                 </View>
               </View>
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   player: {
-    marginTop: 70,
+    marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -199,10 +199,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 16.00,
     elevation: 24,
+    width: 200,
+    height: 200,
   },
   coverImage: {
-    width: 250,
-    height: 250,
+    width: '100%',
+    height: '100%',
   },
   name: {
     padding: 20,
@@ -223,6 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     marginLeft: 5,
     marginRight: 5,
+    elevation: 0,
   },
   controlIcon: {
     color: '#000000',
@@ -245,6 +248,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     backgroundColor: 'transparent',
     padding: 0,
+    elevation: 0,
   },
   likeButtonIcon: {
     color: '#000000',
@@ -252,6 +256,7 @@ const styles = StyleSheet.create({
   },
   dislikeButton: {
     backgroundColor: 'transparent',
+    elevation: 0,
   },
   dislikeButtonIcon: {
     color: '#f50e0a',

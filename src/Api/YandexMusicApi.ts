@@ -43,18 +43,26 @@ export default class YandexMusicApi {
     await this.post(`/users/${userId}/likes/tracks/remove`, `track-ids=${trackId}`);
   }
 
-  public async searchTracks(query: string): Promise<Track[]> {
-    const response = await this.get(`/search?text=${query}&nocorrect=true&type=track&page=0&playlist-in-best=false`);
-    
-    if (Array.isArray(response.tracks.results)) {
-      return response.tracks.results.map(mapTrack);
+  public async getPlaylists(userId: number): Promise<Playlist[]> {
+    const playlists = await this.get(`/users/${userId}/playlists/list`);
+
+    if (Array.isArray(playlists)) {
+      return playlists.map((playlist: any): Playlist => {
+        return {
+          id: playlist.uid,
+          kind: playlist.kind,
+          name: playlist.title,
+          cover: playlist.ogImage,
+          trackCount: playlist.trackCount,
+        };
+      });
     }
 
     return [];
   }
 
-  public async getLikedTracks(userId: number): Promise<Track[]> {
-    const response = await this.get(`/users/${userId}/playlists/3`);
+  public async getPlaylistTracks(userId: number, kind: number = 3): Promise<Track[]> {
+    const response = await this.get(`/users/${userId}/playlists/${kind}`);
 
     if (Array.isArray(response.tracks)) {
       return response.tracks.map((t: any) => mapTrack(t.track));
@@ -63,17 +71,11 @@ export default class YandexMusicApi {
     return [];
   }
 
-  public async getPlaylists(userId: number): Promise<Playlist[]> {
-    const playlists = await this.get(`/users/${userId}/playlists/list`);
-
-    if (Array.isArray(playlists)) {
-      return playlists.map((playlist: any): Playlist => {
-        return {
-          id: playlist.uid,
-          name: playlist.title,
-          cover: playlist.ogImage,
-        };
-      });
+  public async searchTracks(query: string): Promise<Track[]> {
+    const response = await this.get(`/search?text=${query}&nocorrect=true&type=track&page=0&playlist-in-best=false`);
+    
+    if (Array.isArray(response.tracks.results)) {
+      return response.tracks.results.map(mapTrack);
     }
 
     return [];

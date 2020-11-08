@@ -29,16 +29,21 @@ const Footer = (props: Props) => {
     selected = 'Dashboard';
   }
 
-  if (['Playlists'].includes(props.routeName)) {
+  if (['Playlists', 'Playlist'].includes(props.routeName)) {
     selected = 'Playlists';
+  }
+
+  if (props.routeName === 'SendCommand') {
+    selected = 'SendCommand';
   }
 
   return (
     <View style={styles.wrapper}>
       <SafeAreaView>
         <View style={styles.tabs}>
-          <Tab name="Пульт" icon="radio" route="Dashboard" selected={selected === 'Dashboard'}></Tab>
-          <Tab name="Музыка" icon="play-circle" route="Playlists" selected={selected === 'Playlists'}></Tab>
+          <Tab name="Пульт" icon="ios-radio" route="Dashboard" selected={selected === 'Dashboard'}></Tab>
+          <Tab name="Музыка" icon="ios-play-circle" route="Playlists" selected={selected === 'Playlists'}></Tab>
+          <Tab name="Команды" icon="ios-send" route="SendCommand" selected={selected === 'SendCommand'}></Tab>
         </View>
       </SafeAreaView>
     </View>
@@ -59,6 +64,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     flexDirection: 'row',
     justifyContent: 'center',
+    height: 60,
   },
   tab: {
     borderRadius: 5,
@@ -81,6 +87,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 11,
+    color: '#000000',
   },
   activeName: {
     fontSize: 11,

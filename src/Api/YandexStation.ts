@@ -1,5 +1,6 @@
 import { debounce } from '../helpers';
 import { CurrentState, Device } from '../models';
+import WebSocketSecure, { NativeWebSocketModule } from '../modules/WebSocketSecure';
 
 type ConnectedEvent = (bound?: any) => void;
 type ConnectingEvent = (bound?: any) => void;
@@ -55,20 +56,30 @@ class YandexStation {
       this.connection = null;
     }
 
-    this.connection = new WebSocket(`wss://${device.ip}:${device.port}/`);
+    let connection: WebSocket | WebSocketSecure;
 
-    this.connection.onopen = () => {
+    if (NativeWebSocketModule) {
+      connection = new WebSocketSecure(`wss://${device.ip}:${device.port}/`, [], {
+        ca: device.glagol.security.server_certificate,
+      });
+    } else {
+      connection = new WebSocket(`wss://${device.ip}:${device.port}/`);
+    }
+
+    connection.onopen = () => {
       sendConnectionState('connected');
     };
-    this.connection.onclose = () => {
+    connection.onclose = () => {
       sendConnectionState('disconnected');
     };
-    this.connection.onmessage = (m) => {
+    connection.onmessage = (m) => {
       this.eventListeners.state.map((cb) => cb(JSON.parse(m.data) as CurrentState));
     };
-    this.connection.onerror = (e) => {
+    connection.onerror = (e) => {
       console.log('WSError', e);
     };
+
+    this.connection = connection;
   }
   debounceConnect = debounce(this.connect, 500);
 

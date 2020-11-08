@@ -192,6 +192,9 @@ android {
 
         }
     }
+    dexOptions {
+       javaMaxHeapSize "3g"
+    }
 }
 
 dependencies {
@@ -218,6 +221,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    compile project(":react-native-zeroconf")
 }
 
 // Run this once to be able to run the application with BUCK

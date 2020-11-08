@@ -77,6 +77,7 @@ export type Playlist = {
   kind: number;
   name: string;
   cover: string;
+  trackCount: number;
 };
 
 export type Track = {

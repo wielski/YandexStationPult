@@ -120,6 +120,20 @@ export default class GlagolApi {
             resolve(localDevices);
             zeroconf.stop();
           }
+        } else if(localDevice.name) {
+          const id = localDevice.name.replace(/YandexIOReceiver-/g, '');
+
+          if (deviceIds.includes(id)) {
+            localDevice.txt.deviceId = id;
+
+            localDevices.push(localDevice);
+            deviceIds.splice(deviceIds.indexOf(id), 1);
+
+            if (deviceIds.length === 0) {
+              resolve(localDevices);
+              zeroconf.stop();
+            }
+          }
         }
       });
 

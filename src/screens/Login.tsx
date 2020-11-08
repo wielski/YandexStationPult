@@ -112,9 +112,8 @@ export class Login extends Component<LoginProps> {
       <View style={styles.container}>
         <View style={styles.content}>
           <View style={styles.logo}>
-            <Icon name="radio" style={styles.logoIcon} />
-            <Text style={styles.logoText}>Station</Text>
-            <Text style={styles.logoAppend}>Pult</Text>
+            <Icon name="ios-radio" style={styles.logoIcon} />
+            <Text style={styles.logoText}>Станция</Text>
           </View>
 
           <Item style={styles.inputItem}>

@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import { useSharedState } from '../store';
 import GlagolApi from '../Api/GlagolApi';
 import YandexStation from '../Api/YandexStation';
-import { CurrentState, Device } from '../models';
+import {  Device } from '../models';
 
 interface HeaderProps {
   sharedState: ReturnType<typeof useSharedState>,
@@ -58,7 +58,7 @@ export class Header extends Component<HeaderProps> {
     return (
       <View style={styles.header}>
         <View style={styles.container}>
-          <View>
+          <View style={styles.picker}>
             <Picker
               textStyle={styles.pickerText}
               iosHeader="Станция"
@@ -77,13 +77,13 @@ export class Header extends Component<HeaderProps> {
               <ActivityIndicator style={styles.statusConnecting} size="small" color="#6b6f75" />
             }
             {state.deviceStatus === 'connected' &&
-              <Icon style={styles.statusConnected} name="wifi" />
+              <Icon style={styles.statusConnected} name="ios-wifi" />
             }
             {state.deviceStatus === 'disconnected' &&
-              <Icon style={styles.statusDisconnected} name="alert" />
+              <Icon style={styles.statusDisconnected} name="ios-alert" />
             }
             <Button onPress={() => this.updateDevices()} transparent>
-              <Icon style={styles.buttonIcon} name="refresh" />
+              <Icon style={styles.buttonIcon} name="ios-refresh" />
             </Button>
           </View>
         </View>
@@ -110,6 +110,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  picker: {
+    width: '50%',
   },
   pickerText: {
     color: '#6b6f75',
