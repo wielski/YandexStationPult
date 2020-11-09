@@ -181,11 +181,11 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   container: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   player: {
-    marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -218,7 +218,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   control: {
-    flex: 1,
     flexDirection: 'row',
   },
   controlButton: {

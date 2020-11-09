@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -22,6 +22,7 @@ interface PlaylistsProps extends Props {
 type State = {
   tracks: Track[];
   searchText: string;
+  refreshing: boolean;
 };
 
 const yandexMusicApi = new YandexMusicApi();
@@ -30,6 +31,7 @@ export class Playlist extends Component<PlaylistsProps> {
   state: State = {
     tracks: [],
     searchText: '',
+    refreshing: false,
   };
 
   constructor(props: PlaylistsProps) {
@@ -67,6 +69,14 @@ export class Playlist extends Component<PlaylistsProps> {
     });
   }
 
+  public async onRefresh(): Promise<void> {
+    this.setState({ ...this.state, refreshing: true });
+
+    await this.loadPlaylist();
+
+    this.setState({ ...this.state, refreshing: false });
+  }
+
   render() {
     let tracks = this.state.tracks;
 
@@ -84,7 +94,13 @@ export class Playlist extends Component<PlaylistsProps> {
             onClear={() => { this.setState({...this.state, searchText: '' }) }}
             onSearch={(text: string) => { this.setState({...this.state, searchText: text }) }} />
 
-          <ScrollView style={styles.scroll}>
+          <ScrollView
+            style={styles.scroll}
+            refreshControl={
+              <RefreshControl refreshing={this.state.refreshing} onRefresh={() => {
+                this.onRefresh()
+              }} />
+            }>
             {tracks && tracks.length > 0 ? 
               <View>
                 {tracks.map((track, index) => (

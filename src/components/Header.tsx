@@ -93,7 +93,17 @@ export class Header extends Component<HeaderProps> {
 }
 
 export default () => {
-  return <Header sharedState={useSharedState()} />;
+  const sharedState = useSharedState();
+
+  const trackState = () => {
+    for (const v of Object.values(sharedState[0])) {
+      v;
+    }
+  }
+
+  trackState();
+
+  return <Header sharedState={sharedState} />;
 };
 
 const styles = StyleSheet.create({

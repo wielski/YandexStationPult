@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
 import GestureRecognizer from 'react-native-swipe-gestures';
@@ -26,6 +26,7 @@ type State = {
   playlists: Playlist[];
   tracks: Track[];
   tracksView: boolean;
+  refreshing: boolean;
 };
 
 const yandexMusicApi = new YandexMusicApi();
@@ -35,6 +36,7 @@ export class Playlists extends Component<PlaylistsProps> {
     playlists: [],
     tracks: [],
     tracksView: false,
+    refreshing: false,
   };
 
   constructor(props: PlaylistsProps) {
@@ -97,41 +99,44 @@ export class Playlists extends Component<PlaylistsProps> {
     });
   }
 
-  public onSwipeDown(): void {
-    this.loadPlaylists();
+  public async onRefresh(): Promise<void> {
+    this.setState({ ...this.state, refreshing: true });
+
+    if (this.state.tracksView) {
+      await this.loadPlaylists();
+    }
+
+    this.setState({ ...this.state, refreshing: false });
   }
 
   public playlists() {
     const playlists = this.state.playlists;
 
     return (
-      <GestureRecognizer
-        onSwipeDown={() => this.onSwipeDown()}>
-        <View style={styles.playlists}>
-          {playlists.map((playlist, index) => (
-            <View style={styles.playlistWrapper} key={index}>
-              <TouchableOpacity
-                style={styles.playlist}
-                onPress={() => {
-                  navigate('Playlist', { kind: playlist.kind });
-                }}>
-                <View style={styles.playlistImageWrapper}>
-                  {playlist.cover && playlist.cover.length > 0 ?
-                    <Image
-                      style={styles.playlistImage}
-                      source={{
-                        uri: `http://${playlist.cover.replace(/%%/g, 'm1000x1000?webp=false')}`,
-                      }}
-                    />
-                  : null}
-                </View>
-                <Text style={styles.playlistName}>{playlist.name}</Text>
-                <Text style={styles.playlistTrackCount}>{playlist.trackCount}</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      </GestureRecognizer>
+      <View style={styles.playlists}>
+        {playlists.map((playlist, index) => (
+          <View style={styles.playlistWrapper} key={index}>
+            <TouchableOpacity
+              style={styles.playlist}
+              onPress={() => {
+                navigate('Playlist', { kind: playlist.kind });
+              }}>
+              <View style={styles.playlistImageWrapper}>
+                {playlist.cover && playlist.cover.length > 0 ?
+                  <Image
+                    style={styles.playlistImage}
+                    source={{
+                      uri: `http://${playlist.cover.replace(/%%/g, 'm1000x1000?webp=false')}`,
+                    }}
+                  />
+                : null}
+              </View>
+              <Text style={styles.playlistName}>{playlist.name}</Text>
+              <Text style={styles.playlistTrackCount}>{playlist.trackCount}</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
     );
   }
 
@@ -164,7 +169,13 @@ export class Playlists extends Component<PlaylistsProps> {
             onClear={() => { this.clearTracks() }}
             onSearch={(text: string) => { this.searchTracksDebounce(text) }} />
 
-          <ScrollView style={styles.scroll}>
+          <ScrollView
+            style={styles.scroll}
+            refreshControl={
+              <RefreshControl refreshing={this.state.refreshing} onRefresh={() => {
+                this.onRefresh()
+              }} />
+            }>
             {this.state.tracksView ? this.tracks() : this.playlists()}
           </ScrollView>
         </View>

@@ -145,7 +145,9 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     YandexStation.on('disconnected', this.disconnected.bind(this));
     YandexStation.on('state', this.setDeviceState.bind(this));
 
-    this.loadDevices();
+    setTimeout(() => {
+      this.loadDevices();
+    }, 500);
   }
 
   componentWillUnmount(): void {
