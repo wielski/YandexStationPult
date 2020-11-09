@@ -13,7 +13,7 @@ type Event = 'connecting' | 'connected' | 'disconnected' | 'state';
 class YandexStation {
   private device: Device | null = null;
   // private connection: TcpSocket | null = null;
-  private connection: WebSocket | null = null;
+  private connection: WebSocket | WebSocketSecure | null = null;
 
   private eventListeners: {
     connecting: ConnectingEvent[],
@@ -58,8 +58,10 @@ class YandexStation {
 
     let connection: WebSocket | WebSocketSecure;
 
+    console.log('WSM: ', NativeWebSocketModule);
     if (NativeWebSocketModule) {
       connection = new WebSocketSecure(`wss://${device.ip}:${device.port}/`, [], {
+        headers: {},
         ca: device.glagol.security.server_certificate,
       });
     } else {

@@ -1,7 +1,7 @@
 import { NativeEventEmitter, EventSubscription, NativeModules } from 'react-native';
 import EventTarget from 'event-target-shim';
 
-export const NativeWebSocketModule = NativeModules.WebSocketSecure;
+export const NativeWebSocketModule = NativeModules.WebSocketSecureModule || NativeModules.WebSocketSecure;
 
 const CONNECTING = 0;
 const OPEN = 1;
