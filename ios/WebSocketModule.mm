@@ -5,14 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//#import <React/RCTWebSocketModule.h>
 #import "WebSocketModule.h"
 #import "WebSocketSecureModule/NativeModules.h"
 #import "WebSocketSecureModule/WebsocketSecureModuleSpec.h"
 
 #import <objc/runtime.h>
 
-//#import <FBReactNativeSpec/FBReactNativeSpec.h>
 #import <React/RCTConvert.h>
 #import <React/RCTSRWebSocket.h>
 #import <React/RCTUtils.h>
@@ -59,8 +57,6 @@ RCT_EXPORT_MODULE()
 
 - (void)invalidate
 {
-//  [super invalidate];
-
   _contentHandlers = nil;
   for (RCTSRWebSocket *socket in _sockets.allValues) {
     socket.delegate = nil;
@@ -96,12 +92,24 @@ RCT_EXPORT_METHOD(connect
     }];
   }
 
-  RCTSRWebSocket *webSocket = [[RCTSRWebSocket alloc] initWithURLRequest:request protocols:protocols];
-  
-  if([options.ca() isKindOfClass:NSString.class]) {
-    RCTLogInfo(@"Certificate provided!!");
+  NSMutableURLRequest *mutableRequest;
+  mutableRequest = request.mutableCopy;
+
+  if ([options.ca() isKindOfClass:NSString.class]) {
+    NSRange r1 = [options.ca() rangeOfString:@"-----BEGIN CERTIFICATE-----"];
+    NSRange r2 = [options.ca() rangeOfString:@"-----END CERTIFICATE-----"];
+    NSRange rSub = NSMakeRange(r1.location + r1.length, r2.location - r1.location - r1.length);
+    NSString *subCert = [options.ca() substringWithRange:rSub];
+
+    NSData *rawCertificate = [[NSData alloc] initWithBase64Encoding:subCert];
+    SecCertificateRef parsedCertificate = SecCertificateCreateWithData(NULL, (__bridge CFDataRef)rawCertificate);
+
+    NSArray* certArray = @[ (__bridge id)parsedCertificate ];
+
+    [mutableRequest setRCTSR_SSLPinnedCertificates:certArray];
   }
-  
+
+  RCTSRWebSocket *webSocket = [[RCTSRWebSocket alloc] initWithURLRequest:mutableRequest protocols:protocols];
   [webSocket setDelegateDispatchQueue:[self methodQueue]];
   webSocket.delegate = self;
   webSocket.reactTag = @(socketID);
@@ -179,9 +187,7 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
   NSNumber *socketID = [webSocket reactTag];
   _contentHandlers[socketID] = nil;
   _sockets[socketID] = nil;
-  NSDictionary *body =
-      @{@"message" : error.localizedDescription ?: @"Undefined, error is nil", @"id" : socketID ?: @(-1)};
-  [self sendEventWithName:@"websocketFailed" body:body];
+  [self sendEventWithName:@"websocketFailed" body:@{@"message" : error.localizedDescription, @"id" : socketID}];
 }
 
 - (void)webSocket:(RCTSRWebSocket *)webSocket
@@ -201,11 +207,13 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
                      }];
 }
 
-//- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-//    (const facebook::react::ObjCTurboModule::InitParams &)params
-//{
-//  return std::make_shared<facebook::react::NativeWebSocketModuleSpecJSI>(params);
-//}
+- (std::shared_ptr<facebook::react::TurboModule>)
+    getTurboModuleWithJsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
+                  nativeInvoker:(std::shared_ptr<facebook::react::CallInvoker>)nativeInvoker
+                     perfLogger:(id<RCTTurboModulePerformanceLogger>)perfLogger
+{
+  return std::make_shared<facebook::react::NativeWebSocketSecureModuleSpecJSI>(self, jsInvoker, nativeInvoker, perfLogger);
+}
 
 @end
 

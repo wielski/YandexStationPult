@@ -157,8 +157,6 @@ export class Playlists extends Component<PlaylistsProps> {
   }
 
   render() {
-    this.loadPlaylists();
-
     return (
       <SafeAreaView>
         <View style={styles.wrapper}>
@@ -172,6 +170,10 @@ export class Playlists extends Component<PlaylistsProps> {
         </View>
       </SafeAreaView>
     );
+  }
+
+  componentDidMount(): void {
+    this.loadPlaylists();
   }
 }
 

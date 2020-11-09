@@ -58,10 +58,8 @@ class YandexStation {
 
     let connection: WebSocket | WebSocketSecure;
 
-    console.log('WSM: ', NativeWebSocketModule);
     if (NativeWebSocketModule) {
       connection = new WebSocketSecure(`wss://${device.ip}:${device.port}/`, [], {
-        headers: {},
         ca: device.glagol.security.server_certificate,
       });
     } else {
