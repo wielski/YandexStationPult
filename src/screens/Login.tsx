@@ -63,7 +63,9 @@ export class Login extends Component<LoginProps> {
     const {email, password, x_captcha_answer, x_captcha_key} = this.state;
 
     authApi.generateToken(email, password, x_captcha_answer, x_captcha_key).then(token => {
-      this.successLogin(token);
+      authApi.generateMainToken(email, password).then((mainToken => {
+        this.successLogin(token, mainToken);
+      }));
     }).catch(error => {
       if (error instanceof CaptchaRequired || error instanceof CaptchaWrong) {
         const { x_captcha_url, x_captcha_key, error_description } = error.body;
@@ -84,7 +86,7 @@ export class Login extends Component<LoginProps> {
     });
   }
 
-  public async successLogin(token: string): Promise<void> {
+  public async successLogin(token: string, mainToken: string): Promise<void> {
     const [state, setState] = this.props.sharedState;
     const navigation = this.props.navigation;
 
@@ -97,9 +99,10 @@ export class Login extends Component<LoginProps> {
       x_captcha_answer: undefined,
       token: token,
     });;
-    setState({ ...state, authToken: token });
+    setState({ ...state, authToken: token, mainToken: mainToken });
 
     await AccessTokenStorage.setToken(token);
+    await AccessTokenStorage.setMainToken(mainToken);
 
     navigation.reset({
       index: 0,

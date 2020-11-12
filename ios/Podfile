@@ -17,6 +17,8 @@ target 'yastationapp' do
   use_flipper!
   pod 'react-native-zeroconf', :path => '../node_modules/react-native-zeroconf'
 
+  pod 'react-native-cookies', :path => '../node_modules/@react-native-community/cookies'
+
   post_install do |installer|
     flipper_post_install(installer)
     installer.pods_project.targets.each do |target|

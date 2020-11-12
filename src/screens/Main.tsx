@@ -46,8 +46,11 @@ export class Main extends Component<MainProps> {
   public processLogin(): void {
     const navigation = this.props.navigation;
 
-    AccessTokenStorage.getToken().then(async (token) => {
-      if (token) {
+    Promise.all([
+      AccessTokenStorage.getToken(),
+      AccessTokenStorage.getMainToken()
+    ]).then(async ([token, mainToken]) => {
+      if (token && mainToken) {
         const checkProfile = await this.getAccountMeta();
 
         if (!checkProfile) {
@@ -62,7 +65,7 @@ export class Main extends Component<MainProps> {
         }
 
         const [state, setState] = this.props.sharedState;
-        setState({ ...state, authToken: token });
+        setState({ ...state, authToken: token, mainToken: mainToken });
 
         navigation.reset({
           index: 0,

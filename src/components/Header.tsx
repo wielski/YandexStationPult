@@ -5,7 +5,8 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import { useSharedState } from '../store';
 import GlagolApi from '../Api/GlagolApi';
 import YandexStation from '../Api/YandexStation';
-import {  Device } from '../models';
+import YandexStationNetwork from '../Api/YandexStationNetwork';
+import { Device } from '../models';
 
 interface HeaderProps {
   sharedState: ReturnType<typeof useSharedState>,
@@ -21,6 +22,14 @@ export class Header extends Component<HeaderProps> {
   async updateDevices(): Promise<void> {
     const [state, setState] = this.props.sharedState;
     const devices = await glagolApi.getDeviceList();
+
+    try {
+      YandexStationNetwork.init(devices);
+    } catch (e) {
+      // TODO: Process error
+      console.log(e);
+    }
+
     setState({ ...state, devices });
   }
 

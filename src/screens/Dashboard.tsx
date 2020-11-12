@@ -12,38 +12,61 @@ import { useSharedState } from '../store';
 import Header from '../components/Header';
 import YandexStation from '../Api/YandexStation';
 import YandexMusicApi from '../Api/YandexMusicApi';
+import YandexStationNetwork from '../Api/YandexStationNetwork';
 
 type Props = StackScreenProps<RootStackParamList, 'Dashboard'>;
 interface DashboardProps extends Props {
   sharedState: ReturnType<typeof useSharedState>,
 };
 
+type LocalState = {
+  isPlaying: boolean;
+};
+
 const yandexMusicApi = new YandexMusicApi();
 
 export class Dashboard extends Component<DashboardProps> {
+  state: LocalState = {
+    isPlaying: false,
+  };
+
   constructor(props: DashboardProps) {
     super(props);
   }
 
   public play(): void {
+    if (this.sendByNetwork('Включи')) {
+      this.setState({ ...this.state, isPlaying: true });
+      return;
+    }
+
     YandexStation.sendCommand({
       command: 'play',
     });
   }
 
   public stop(): void {
+    if (this.sendByNetwork('Стоп')) {
+      this.setState({ ...this.state, isPlaying: false });
+      return;
+    }
+
     YandexStation.sendCommand({
       command: 'stop',
     });
   }
 
   public prev(): void {
+    if (this.sendByNetwork('Назад')) return;
+
     YandexStation.sendCommand({
       command: 'prev',
     });
   }
 
   public next(): void {
+    if (this.sendByNetwork('Дальше')) return;
+
     YandexStation.sendCommand({
       command: 'next',
     });
@@ -56,8 +79,28 @@ export class Dashboard extends Component<DashboardProps> {
     });
   }
 
+  public up(): void {
+    if (this.sendByNetwork('Вверх')) return;
+
+    YandexStation.sendCommand({
+      command: 'sendText',
+      text: 'Вверх',
+    });
+  }
+
+  public down(): void {
+    if (this.sendByNetwork('Вниз')) return;
+
+    YandexStation.sendCommand({
+      command: 'sendText',
+      text: 'Вниз',
+    });
+  }
+
   public async like(id: number): Promise<void> {
-    const [state, setState] = this.props.sharedState
+    if (this.sendByNetwork('Поставь лайк')) return;
+
+    const [state, setState] = this.props.sharedState;
     if (!state.account) return;
 
     try {
@@ -73,7 +116,9 @@ export class Dashboard extends Component<DashboardProps> {
   }
 
   public async dislike(id: number): Promise<void> {
-    const [state, setState] = this.props.sharedState
+    if (this.sendByNetwork('Поставь дизлайк')) return;
+
+    const [state, setState] = this.props.sharedState;
     if (!state.account) return;
 
     try {
@@ -98,6 +143,66 @@ export class Dashboard extends Component<DashboardProps> {
     return Array.isArray(state.likedTracks) && [...state.likedTracks].includes(intId);
   }
 
+  public sendByNetwork(command: string): boolean {
+    const [state] = this.props.sharedState;
+
+    if (state.deviceStatus === 'disconnected' && state.selectedDevice) {
+      try {
+        YandexStationNetwork.sendCommand(state.selectedDevice.id, command);
+      } catch (e) {
+        // TODO: Process error
+        console.log(e);
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  disconnectedControl() {
+    const isPlaying = this.state.isPlaying;
+
+    return (
+      <View style={styles.player}>
+        <View style={styles.control}>
+          <Button onPress={() => this.dislike(0)} style={styles.dislikeButton} small>
+            <Icon style={styles.dislikeButtonIcon} name="ios-heart" />
+          </Button>
+          <Button onPress={() => this.like(0)} style={styles.likeButton} small>
+            <Icon style={styles.likeButtonIcon} name="ios-heart-dislike" />
+          </Button>
+        </View>
+        <View style={styles.control}>
+          <Button onPress={() => this.up()} style={styles.controlButton} large>
+            <Icon style={styles.controlIcon} name="ios-arrow-up" />
+          </Button>
+        </View>
+        <View style={styles.control}>
+          <Button onPress={() => this.prev()} style={styles.controlButton} large>
+            <Icon style={styles.controlIcon} name="ios-arrow-back" />
+          </Button>
+          { isPlaying ?
+            <Button onPress={() => this.stop()} style={styles.controlButton} large>
+              <Icon style={styles.playPauseIcon} name="ios-pause" />
+            </Button> :
+            <Button onPress={() => this.play()} style={styles.controlButton} large>
+              <Icon style={styles.playPauseIcon} name="ios-play" />
+            </Button>
+          }
+          <Button onPress={() => this.next()} style={styles.controlButton}large>
+            <Icon style={styles.controlIcon} name="ios-arrow-forward" />
+          </Button>
+        </View>
+        <View style={styles.control}>
+          <Button onPress={() => this.down()} style={styles.controlButton} large>
+            <Icon style={styles.controlIcon} name="ios-arrow-down" />
+          </Button>
+        </View>
+      </View>
+    );
+  }
+
   render() {
     const [state] = this.props.sharedState;
     const currentPlaying = state.currentPlaying;
@@ -106,8 +211,19 @@ export class Dashboard extends Component<DashboardProps> {
       <SafeAreaView>
         <View style={styles.dashboard}>
           <Header />
+          {state.deviceStatus === 'disconnected' ?
+            <View style={styles.disconnectedMessage}>
+              <Text style={styles.disconnectedText}>
+                Не удалось подключиться к станции, приложение работает в урезанном режиме
+              </Text>
+            </View>
+          : null}
           <View style={styles.container}>
-            {currentPlaying.hasState && 
+            {state.deviceStatus === 'disconnected' ?
+              this.disconnectedControl()
+            : null}
+
+            {currentPlaying.hasState && state.deviceStatus === 'connected' &&
               <View style={styles.player}>
                 {currentPlaying.cover && currentPlaying.cover.length > 0 ?
                   <View style={styles.cover}>
@@ -126,11 +242,11 @@ export class Dashboard extends Component<DashboardProps> {
                 <View style={styles.favoriteControl}>
                   { this.isLiked(String(currentPlaying.id)) ?
                     <Button onPress={() => this.dislike(currentPlaying.id as number)} style={styles.dislikeButton} small>
-                      <Icon style={styles.dislikeButtonIcon} name="heart" />
+                      <Icon style={styles.dislikeButtonIcon} name="ios-heart" />
                     </Button>
                     :
                     <Button onPress={() => this.like(currentPlaying.id as number)} style={styles.likeButton} small>
-                      <Icon style={styles.likeButtonIcon} name="heart-empty" />
+                      <Icon style={styles.likeButtonIcon} name="ios-heart-empty" />
                     </Button>
                   }
                 </View>
@@ -162,7 +278,7 @@ export class Dashboard extends Component<DashboardProps> {
                 </View>
               </View>
             }
-            {!currentPlaying.hasState &&
+            {!currentPlaying.hasState && state.deviceStatus === 'connected' &&
               <Text style={styles.noPlaying}>Сейчас ничего не играет</Text>
             }
           </View>
@@ -264,5 +380,18 @@ const styles = StyleSheet.create({
   noPlaying: {
     marginTop: 100,
     alignItems: 'center',
+  },
+  disconnectedMessage: {
+    padding: 10,
+    marginBottom: 20,
+    marginRight: 10,
+    marginLeft: 10,
+    borderRadius: 5,
+    backgroundColor: '#fdf1e1',
+  },
+  disconnectedText: {
+    color: '#866332',
+    fontSize: 11,
+    textAlign: 'center',
   },
 });

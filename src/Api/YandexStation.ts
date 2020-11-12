@@ -59,7 +59,7 @@ class YandexStation {
     let connection: WebSocket | WebSocketSecure;
 
     if (NativeWebSocketModule) {
-      connection = new WebSocketSecure(`wss://${device.ip}:${device.port}/`, [], {
+      connection = new WebSocketSecure(`wss://${device.ip}:${device.port}1/`, [], {
         ca: device.glagol.security.server_certificate,
       });
     } else {

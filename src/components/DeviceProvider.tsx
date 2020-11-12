@@ -6,6 +6,7 @@ import { CurrentPlaying, CurrentState, Device } from '../models';
 
 import GlagolApi from '../Api/GlagolApi';
 import YandexStation from '../Api/YandexStation';
+import YandexStationNetwork from '../Api/YandexStationNetwork';
 
 interface DeviceProviderProps {
   sharedState: ReturnType<typeof useSharedState>,
@@ -23,6 +24,13 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     const [state, setState] = this.props.sharedState;
 
     const devices = await glagolApi.getDeviceList();
+
+    try {
+      YandexStationNetwork.init(devices);
+    } catch (e) {
+      // TODO: Process error
+      console.log(e);
+    }
 
     const newState: {
       devices: Device[],

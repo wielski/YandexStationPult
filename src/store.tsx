@@ -9,6 +9,7 @@ const initialState: {
   deviceState: Partial<CurrentState>,
   currentPlaying: CurrentPlaying,
   authToken: string | null,
+  mainToken: string | null,
   //
   account: Account | null,
   likedTracks: number[],
@@ -19,6 +20,7 @@ const initialState: {
   deviceState: {},
   currentPlaying: { hasState: false },
   authToken: null,
+  mainToken: null,
   // account info
   account: null,
   likedTracks: [],

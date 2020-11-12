@@ -8,6 +8,7 @@ import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
 
 import YandexStation from '../Api/YandexStation';
+import YandexStationNetwork from '../Api/YandexStationNetwork';
 import YandexMusicApi from '../Api/YandexMusicApi';
 import { Track } from '../models';
 
@@ -39,6 +40,21 @@ export class Playlist extends Component<PlaylistsProps> {
   }
 
   public playTrack(track: Track): void {
+    const [state] = this.props.sharedState;
+
+    if (state.deviceStatus === 'disconnected' && state.selectedDevice) {
+      try {
+        YandexStationNetwork.sendCommand(
+          state.selectedDevice.id,
+          `Включи ${track.subtitle} - ${track.title}`,
+        );
+      } catch (e) {
+        console.log(e);
+      }
+
+      return;
+    }
+
     YandexStation.sendCommand({
       command: 'playMusic',
       id: String(track.id),

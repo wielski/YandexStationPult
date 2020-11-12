@@ -6,6 +6,7 @@ import android.net.Uri;
 
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.reactnativecommunity.cookies.CookieManagerPackage;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.balthazargronon.RCTZeroconf.ZeroconfReactPackage;
 import com.wielski.yastation.WebSocketPackage;

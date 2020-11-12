@@ -3,12 +3,12 @@ import React, { Component } from 'react';
 import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
-import GestureRecognizer from 'react-native-swipe-gestures';
 
 import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
 
 import YandexStation from '../Api/YandexStation';
+import YandexStationNetwork from '../Api/YandexStationNetwork';
 import YandexMusicApi from '../Api/YandexMusicApi';
 import { Playlist, Track } from '../models';
 
@@ -44,6 +44,21 @@ export class Playlists extends Component<PlaylistsProps> {
   }
 
   public playTrack(track: Track): void {
+    const [state] = this.props.sharedState;
+
+    if (state.deviceStatus === 'disconnected' && state.selectedDevice) {
+      try {
+        YandexStationNetwork.sendCommand(
+          state.selectedDevice.id,
+          `Включи ${track.subtitle} - ${track.title}`,
+        );
+      } catch (e) {
+        console.log(e);
+      }
+
+      return;
+    }
+
     YandexStation.sendCommand({
       command: 'playMusic',
       id: String(track.id),

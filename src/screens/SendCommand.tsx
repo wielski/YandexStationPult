@@ -9,6 +9,7 @@ import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
 
 import YandexStation from '../Api/YandexStation';
+import YandexStationNetwork from '../Api/YandexStationNetwork';
 
 type Props = StackScreenProps<RootStackParamList, 'SendCommand'>;
 interface SendCommandProps extends Props {
@@ -33,6 +34,19 @@ export class SendCommand extends Component<SendCommandProps> {
   }
 
   public sendText(): void {
+    const [state] = this.props.sharedState;
+
+    if (state.deviceStatus === 'disconnected' && state.selectedDevice) {
+      try {
+        YandexStationNetwork.sendCommand(state.selectedDevice.id, this.state.command, this.state.sendText);
+      } catch (e) {
+        // TODO: Process error
+        console.log(e);
+      }
+
+      return;
+    }
+
     const text = this.state.sendText ? `Повтори за мной "${this.state.command}"` : this.state.command;
 
     YandexStation.sendCommand({
@@ -84,7 +98,17 @@ export class SendCommand extends Component<SendCommandProps> {
 }
 
 export default (props: Props) => {
-  return <SendCommand sharedState={useSharedState()} {...props} />;
+  const sharedState = useSharedState();
+
+  const trackState = () => {
+    for (const v of Object.values(sharedState[0])) {
+      v;
+    }
+  }
+
+  trackState();
+
+  return <SendCommand sharedState={sharedState} {...props} />;
 };
 
 const styles = StyleSheet.create({
