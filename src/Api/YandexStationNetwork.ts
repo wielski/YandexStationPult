@@ -15,8 +15,17 @@ type DeviceMap = {
   quasarId: string;
 }
 
+const errorsLog: string[] = [];
+
 class YandexStationNetwork {
   private scenarios: Record<string, Scenario> = {};
+
+  getLog(): string[] {
+    return [
+      `[yandex-station-network]:`,
+      ...errorsLog,
+    ];
+  }
 
   public async init(devices: Device[]): Promise<void> {
     let scenarios = await this.loadScenarios();
@@ -60,6 +69,7 @@ class YandexStationNetwork {
     const scenario = this.scenarios[deviceId];
 
     if (!scenario) {
+      errorsLog.push('no scenario found');
       throw new Error('no scenario found');
     }
 
@@ -164,6 +174,7 @@ class YandexStationNetwork {
       return true;
     }
 
+    errorsLog.push('cant create empty scenario: ' + req.status);
     return false;
   }
 
@@ -288,7 +299,7 @@ class YandexStationNetwork {
         }
       }
 
-      console.log('RequestError: ', path);
+      errorsLog.push('Request error: ' + e.status);
       throw new Error(`Error ${e.status}`);
     });
   }

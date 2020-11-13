@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'react-native';
 import { NavigationContainer, NavigationState, PartialState } from '@react-navigation/native';
+import FlashMessage from 'react-native-flash-message';
 
 import { SharedStateProvider } from './store';
 import Navigator from './Navigation';
@@ -35,6 +36,7 @@ export default function App() {
           <Navigator />
         </NavigationContainer>
         <Footer routeName={routeName} />
+        <FlashMessage position="top" />
       </DeviceProvider>
     </SharedStateProvider>
   );

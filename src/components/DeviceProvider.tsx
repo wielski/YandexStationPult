@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { decode as Base64Decode } from 'base-64';
+import { showMessage } from 'react-native-flash-message';
 
 import { useSharedState } from '../store';
 import { CurrentPlaying, CurrentState, Device } from '../models';
@@ -13,9 +14,9 @@ interface DeviceProviderProps {
   children: any,
 };
 
-const glagolApi = new GlagolApi();
-
 class DeviceProvider extends Component<DeviceProviderProps> {
+  reconnectInterval: NodeJS.Timeout | null = null;
+
   constructor(props: DeviceProviderProps) {
     super(props);
   }
@@ -23,13 +24,15 @@ class DeviceProvider extends Component<DeviceProviderProps> {
   public async loadDevices(): Promise<void> {
     const [state, setState] = this.props.sharedState;
 
-    const devices = await glagolApi.getDeviceList();
+    const devices = await GlagolApi.getDeviceList();
 
     try {
       YandexStationNetwork.init(devices);
     } catch (e) {
-      // TODO: Process error
-      console.log(e);
+      showMessage({
+        message: 'Не удалось подключиться к станции по сети',
+        type: 'danger',
+      });
     }
 
     const newState: {
@@ -44,7 +47,7 @@ class DeviceProvider extends Component<DeviceProviderProps> {
       newState.selectedDevice = devices[0];
     }
 
-    setState({ ...state, ...newState });
+    setState(newState);
 
     if (newState.selectedDevice) {
       this.connectToDevice(newState.selectedDevice);
@@ -58,7 +61,7 @@ class DeviceProvider extends Component<DeviceProviderProps> {
       try {
         YandexStation.connectToDevice(device);
       } catch (e) {
-        setState({ ...state, deviceStatus: 'disconnected' })
+        setState({ deviceStatus: 'disconnected' })
       }
     }, 500);
   }
@@ -69,7 +72,7 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     }
 
     const [state, setState] = this.props.sharedState;
-    setState({ ...state, deviceStatus: 'connecting' });
+    setState({ deviceStatus: 'connecting' });
   }
 
   public connected(bound?: Function): void {
@@ -78,7 +81,7 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     }
 
     const [state, setState] = this.props.sharedState;
-    setState({ ...state, deviceStatus: 'connected' });
+    setState({ deviceStatus: 'connected' });
 
     try {
       // send handshake to get device state
@@ -96,7 +99,7 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     }
 
     const [state, setState] = this.props.sharedState;
-    setState({ ...state, deviceStatus: 'disconnected' });
+    setState({ deviceStatus: 'disconnected' });
   }
 
   public setDeviceState(deviceState: CurrentState): void {
@@ -143,7 +146,19 @@ class DeviceProvider extends Component<DeviceProviderProps> {
 
     if (typeof deviceState === 'object') {
       const [state, setState] = this.props.sharedState;
-      setState({ ...state, currentPlaying, deviceStatus: 'connected' });
+      setState({ currentPlaying, deviceStatus: 'connected' });
+    }
+  }
+
+  public tryToReconnect(bound?: Function): void {
+    if (bound) {
+      return;
+    }
+
+    const [state] = this.props.sharedState;
+
+    if (state.deviceStatus === 'disconnected' && state.selectedDevice) {
+      this.connectToDevice(state.selectedDevice);
     }
   }
 
@@ -152,6 +167,12 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     YandexStation.on('connected', this.connected.bind(this));
     YandexStation.on('disconnected', this.disconnected.bind(this));
     YandexStation.on('state', this.setDeviceState.bind(this));
+
+    if (this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
+    }
+
+    setInterval(this.tryToReconnect.bind(this), 5000);
 
     setTimeout(() => {
       this.loadDevices();
@@ -163,6 +184,10 @@ class DeviceProvider extends Component<DeviceProviderProps> {
     YandexStation.off('connected', this.connected.bind(this));
     YandexStation.off('disconnected', this.disconnected.bind(this));
     YandexStation.off('state', this.setDeviceState.bind(this));
+
+    if (this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
+    }
   }
 
   render() {

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon } from 'native-base';
 import SeekBar from '../components/SeekBar';
 import { StackScreenProps } from '@react-navigation/stack';
+import { showMessage } from 'react-native-flash-message';
 
 import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
@@ -22,8 +23,6 @@ interface DashboardProps extends Props {
 type LocalState = {
   isPlaying: boolean;
 };
-
-const yandexMusicApi = new YandexMusicApi();
 
 export class Dashboard extends Component<DashboardProps> {
   state: LocalState = {
@@ -104,14 +103,17 @@ export class Dashboard extends Component<DashboardProps> {
     if (!state.account) return;
 
     try {
-      await yandexMusicApi.likeTrack(state.account.id, id);
+      await YandexMusicApi.likeTrack(state.account.id, id);
 
       const likedTracks = [...state.likedTracks];
       likedTracks.push(id);
 
-      setState({ ...state, likedTracks });
+      setState({ likedTracks });
     } catch (e) {
-      // TODO: Process error
+      showMessage({
+        message: 'Не удалось поставить лайк',
+        type: 'danger',
+      });
     }
   }
 
@@ -122,17 +124,20 @@ export class Dashboard extends Component<DashboardProps> {
     if (!state.account) return;
 
     try {
-      await yandexMusicApi.dislikeTrack(state.account.id, id);
+      await YandexMusicApi.dislikeTrack(state.account.id, id);
 
       const likedTracks = [...state.likedTracks];
       const likedTrackIndex = likedTracks.indexOf(id);
 
       if (likedTrackIndex > -1) {
         likedTracks.splice(likedTrackIndex, 1);
-        setState({ ...state, likedTracks });
+        setState({ likedTracks });
       }
     } catch (e) {
-      // TODO: Process error
+      showMessage({
+        message: 'Не удалось поставить дизлайк',
+        type: 'danger',
+      });
     }
   }
 
@@ -150,8 +155,10 @@ export class Dashboard extends Component<DashboardProps> {
       try {
         YandexStationNetwork.sendCommand(state.selectedDevice.id, command);
       } catch (e) {
-        // TODO: Process error
-        console.log(e);
+        showMessage({
+          message: 'Не удалось выполнить команду по сети',
+          type: 'danger',
+        });
       }
 
       return true;

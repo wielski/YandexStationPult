@@ -87,3 +87,23 @@ export type Track = {
   duration: number;
   cover: string;
 };
+
+export type AccountInfo = {
+  avatar_url: string;
+  birthday: string;
+  display_login: string;
+  display_name: string;
+  firstname: string;
+  gender: string;
+  has_music_subscription: boolean;
+  has_password: boolean;
+  has_plus: boolean;
+  lastname: string;
+  native_default_email: string;
+  normalized_display_login: string;
+  primary_alias_type: number;
+  public_id: string;
+  public_name: string;
+  uid: number;
+  x_token_issued_at: number;
+};

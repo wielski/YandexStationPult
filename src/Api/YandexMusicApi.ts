@@ -19,7 +19,7 @@ const mapTrack = (track: any): Track => {
   };
 }
 
-export default class YandexMusicApi {
+class YandexMusicApi {
   public async getAccount(): Promise<Account> {
     const accountStatus = await this.get('/account/status');
 
@@ -122,3 +122,5 @@ export default class YandexMusicApi {
     });
   }
 }
+
+export default new YandexMusicApi();

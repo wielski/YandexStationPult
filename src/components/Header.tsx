@@ -1,18 +1,20 @@
 import React, { Component } from 'react';
-import { Button, Icon, Picker, Spinner, Text, View } from 'native-base';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { Button, Icon, Picker, View } from 'native-base';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 
 import { useSharedState } from '../store';
 import GlagolApi from '../Api/GlagolApi';
 import YandexStation from '../Api/YandexStation';
 import YandexStationNetwork from '../Api/YandexStationNetwork';
 import { Device } from '../models';
+import { navigate } from '../services/NavigationService';
 
 interface HeaderProps {
   sharedState: ReturnType<typeof useSharedState>,
 };
 
-const glagolApi = new GlagolApi();
+const plus = require('../../assets/plus.png');
 
 export class Header extends Component<HeaderProps> {
   constructor(props: HeaderProps) {
@@ -21,16 +23,18 @@ export class Header extends Component<HeaderProps> {
 
   async updateDevices(): Promise<void> {
     const [state, setState] = this.props.sharedState;
-    const devices = await glagolApi.getDeviceList();
+    const devices = await GlagolApi.getDeviceList();
 
     try {
       YandexStationNetwork.init(devices);
     } catch (e) {
-      // TODO: Process error
-      console.log(e);
+      showMessage({
+        message: 'Не удалось подключиться к станции по сети',
+        type: 'danger',
+      });
     }
 
-    setState({ ...state, devices });
+    setState({ devices });
   }
 
   setStation(id: string): void {
@@ -38,7 +42,7 @@ export class Header extends Component<HeaderProps> {
     const device = state.devices.find((d) => d.id === id);
 
     if (device) {
-      setState({ ...state, selectedDevice: device });
+      setState({ selectedDevice: device });
       this.connectToDevice(device);
     }
   }
@@ -50,7 +54,7 @@ export class Header extends Component<HeaderProps> {
       try {
         YandexStation.connectToDevice(device);
       } catch (e) {
-        setState({ ...state, deviceStatus: 'disconnected' })
+        setState({ deviceStatus: 'disconnected' })
       }
     }, 500);
   }
@@ -94,6 +98,21 @@ export class Header extends Component<HeaderProps> {
             <Button onPress={() => this.updateDevices()} transparent>
               <Icon style={styles.buttonIcon} name="ios-refresh" />
             </Button>
+            { state.info && state.info.uid &&
+            <TouchableOpacity style={styles.account} onPress={() => {
+              navigate('Account', {})
+            }}>
+              { state.info.has_plus &&
+                <Image source={plus} style={styles.accountPlus}></Image>
+              }
+              <Image
+                style={styles.accountImage}
+                source={{
+                  uri: state.info.avatar_url,
+                }}
+              />
+            </TouchableOpacity>
+            }
           </View>
         </View>
       </View>
@@ -162,5 +181,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     padding: 0,
     paddingTop: 2,
-  }
+  },
+  account: {
+    marginRight: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  accountImage: {
+    width: 25,
+    height: 25,
+    borderRadius: 25,
+  },
+  accountPlus: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
 });

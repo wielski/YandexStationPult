@@ -10,9 +10,10 @@ type StateEvent = (currentState: CurrentState) => void;
 type EventCallback = ConnectedEvent | ConnectingEvent | DisconnectedEent | StateEvent;
 type Event = 'connecting' | 'connected' | 'disconnected' | 'state';
 
+const errorsLog: string[] = [];
+
 class YandexStation {
   private device: Device | null = null;
-  // private connection: TcpSocket | null = null;
   private connection: WebSocket | WebSocketSecure | null = null;
 
   private eventListeners: {
@@ -26,6 +27,13 @@ class YandexStation {
     disconnected: [],
     state: [],
   };
+
+  getLog(): string[] {
+    return [
+      `[yandex-station]:`,
+      ...errorsLog,
+    ];
+  }
 
   public connectToDevice(device: Device) {
     if (!device.ip || !device.port) {
@@ -59,10 +67,12 @@ class YandexStation {
     let connection: WebSocket | WebSocketSecure;
 
     if (NativeWebSocketModule) {
-      connection = new WebSocketSecure(`wss://${device.ip}:${device.port}1/`, [], {
+      errorsLog.push('[websocket]: using WSSecure module');
+      connection = new WebSocketSecure(`wss://${device.ip}:${device.port}/`, [], {
         ca: device.glagol.security.server_certificate,
       });
     } else {
+      errorsLog.push('[websocket]: using WS module');
       connection = new WebSocket(`wss://${device.ip}:${device.port}/`);
     }
 
@@ -70,6 +80,7 @@ class YandexStation {
       sendConnectionState('connected');
     };
     connection.onclose = () => {
+      errorsLog.push('[websocket]: disconnected');
       sendConnectionState('disconnected');
     };
     connection.onmessage = (m) => {
@@ -77,6 +88,7 @@ class YandexStation {
     };
     connection.onerror = (e) => {
       console.log('WSError', e);
+      errorsLog.push('[websocket]: Error ' + JSON.stringify(e));
     };
 
     this.connection = connection;
@@ -106,7 +118,6 @@ class YandexStation {
   }
 
   public sendCommand(payload: object): void {
-    // TODO: Send without connection (restricted yandex api)
     if (this.device && !this.connection) {
       this.connectToDevice(this.device);
     }

@@ -10,31 +10,50 @@ import AccessTokenStorage from '../Api/AccessTokenStorage';
 import { useSharedState } from '../store';
 import YandexMusicApi from '../Api/YandexMusicApi';
 
+import { AccountInfo } from '../models';
+
 type Props = StackScreenProps<RootStackParamList, 'Main'>;
 interface MainProps extends Props {
   sharedState: ReturnType<typeof useSharedState>,
 };
-
-const yandexMusicApi = new YandexMusicApi();
 
 export class Main extends Component<MainProps> {
   constructor(props: MainProps) {
     super(props);
   }
 
+  public async getAccountInfo(): Promise<AccountInfo> {
+    const token = await AccessTokenStorage.getMainToken();
+
+    const response = await fetch('https://mobileproxy.passport.yandex.net/1/bundle/account/short_info?avatar_size=islands-200', {
+      method: 'GET',
+      headers: {
+        'Ya-Consumer-Authorization': `OAuth ${token}`
+      },
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      return json;
+    }
+
+    throw new Error('cant get account info');
+  }
+
   public async getAccountMeta(): Promise<boolean> {
     const [state, setState] = this.props.sharedState;
 
     try {
-      const account = await yandexMusicApi.getAccount();
+      const account = await YandexMusicApi.getAccount();
+      const info = await this.getAccountInfo();
 
       if (!account.id) {
         return false;
       }
 
-      const likedTracks = await yandexMusicApi.getLikedTrackIds(account.id);
+      const likedTracks = await YandexMusicApi.getLikedTrackIds(account.id);
 
-      setState({ ...state, account, likedTracks });
+      setState({ account, info, likedTracks });
     } catch (e) {
       return false;
       // TODO: Process error
@@ -65,7 +84,7 @@ export class Main extends Component<MainProps> {
         }
 
         const [state, setState] = this.props.sharedState;
-        setState({ ...state, authToken: token, mainToken: mainToken });
+        setState({ authToken: token, mainToken: mainToken });
 
         navigation.reset({
           index: 0,

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useReducer } from 'react';
 import { createContainer } from 'react-tracked';
-import { Device, CurrentState, CurrentPlaying, Account } from './models';
+import { Device, CurrentState, CurrentPlaying, Account, AccountInfo } from './models';
 
-const initialState: {
+type State = {
   devices: Device[],
   selectedDevice: Device | null,
   deviceStatus: 'connecting' | 'connected' | 'disconnected',
@@ -12,8 +12,11 @@ const initialState: {
   mainToken: string | null,
   //
   account: Account | null,
+  info: AccountInfo | null,
   likedTracks: number[],
-} = {
+};
+
+const initialState: State = {
   devices: [],
   selectedDevice: null,
   deviceStatus: 'disconnected',
@@ -23,10 +26,15 @@ const initialState: {
   mainToken: null,
   // account info
   account: null,
+  info: null,
   likedTracks: [],
 };
 
-const useMyState = () => useState(initialState);
+const useMyState = () => useReducer(reducer, initialState);
+
+export const reducer = (state: State, newState: Partial<State>) => {
+  return {...state, ...newState};
+};
 
 export const {
   Provider: SharedStateProvider,

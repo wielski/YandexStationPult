@@ -18,15 +18,41 @@ type LocalDevice = {
 
 const zeroconf = new Zeroconf();
 
-export default class GlagolApi {
+const foundDevicesLog: string[] = [];
+const resolvedDevicesLog: LocalDevice[] = [];
+const zeroconfErrorsLog: string[] = [];
+const errorsLog: string[] = [];
+
+class GlagolApi {
   private zeroconfTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
     zeroconf.on('error', err => {
       console.log('[Zeroconf Error]', err);
       zeroconf.stop();
+
+      zeroconfErrorsLog.push(String(err));
+    });
+
+    zeroconf.on('found', (found) => {
+      foundDevicesLog.push(found);
     });
   }
+
+  getLog(): string[] {
+    const resolvedDevices = resolvedDevicesLog.map((d) => `${d.name} (${d.txt.deviceId}) - ${d.host}:${d.port}`);
+
+    return [
+      `[zeroconf-found]:`,
+      ...foundDevicesLog,
+      `[zeroconf-resolved]:`,
+      ...resolvedDevices,
+      `[zeroconf-errors]:`,
+      ...zeroconfErrorsLog,
+      `[glagol-errors]:`,
+      ...errorsLog,
+    ];
+  };
 
   async getDeviceList(): Promise<Device[]> {
     const token = await AccessTokenStorage.getToken();
@@ -49,9 +75,11 @@ export default class GlagolApi {
           return json.devices;
         }
 
+        errorsLog.push('No devices found');
         throw new Error('No devices found');
       }
 
+      errorsLog.push('Cant load device list: ' + resp.status);
       throw new Error('Cant load device list');
     }).then((devices): Device[] => {
       return Promise.all(devices.map(async (device: Device) => {
@@ -62,6 +90,8 @@ export default class GlagolApi {
       })) as unknown as Device[];
     }).then(async (devices) => {
       const localDevices = await this.getLocalDevices(devices);
+
+      localDevices.forEach((d) => resolvedDevicesLog.push(d));
 
       return devices.map((device: Device) => {
         const localDevice = localDevices.find((d) => d.txt && d.txt.deviceId === device.id);
@@ -92,9 +122,11 @@ export default class GlagolApi {
           return json.token;
         }
 
+        errorsLog.push('No token found for device: ' + JSON.stringify(json));
         throw new Error('No token found');
       }
 
+      errorsLog.push('No token found for device: ' + resp.status);
       throw new Error('Cant load token');
     });
   }
@@ -158,3 +190,5 @@ export default class GlagolApi {
     }, 5000);
   }
 }
+
+export default new GlagolApi();

@@ -148,7 +148,6 @@ class WebSocketSecure extends EventTarget(WEBSOCKET_EVENTS) {
         if (ev.id !== this.socketId) {
           return;
         }
-        console.log(ev);
         this.readyState = this.CLOSED;
         this.dispatchEvent(
           new WebSocketEvent('error', {

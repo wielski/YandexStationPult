@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Body, Button, CheckBox, Input, Item, ListItem, Text } from 'native-base';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
+import { showMessage } from 'react-native-flash-message';
 
 import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
@@ -40,8 +41,10 @@ export class SendCommand extends Component<SendCommandProps> {
       try {
         YandexStationNetwork.sendCommand(state.selectedDevice.id, this.state.command, this.state.sendText);
       } catch (e) {
-        // TODO: Process error
-        console.log(e);
+        showMessage({
+          message: 'Не удалось отправить команду по сети',
+          type: 'danger',
+        });
       }
 
       return;

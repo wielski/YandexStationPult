@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Icon } from 'native-base';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,28 +23,23 @@ const Footer = (props: Props) => {
     return null;
   }
 
-  let selected: string = '';
-
-  if (props.routeName === 'Dashboard') {
-    selected = 'Dashboard';
-  }
+  let selected: string = props.routeName;
 
   if (['Playlists', 'Playlist'].includes(props.routeName)) {
     selected = 'Playlists';
   }
 
-  if (props.routeName === 'SendCommand') {
-    selected = 'SendCommand';
-  }
-
   return (
     <View style={styles.wrapper}>
       <SafeAreaView>
-        <View style={styles.tabs}>
-          <Tab name="Пульт" icon="ios-radio" route="Dashboard" selected={selected === 'Dashboard'}></Tab>
-          <Tab name="Музыка" icon="ios-play-circle" route="Playlists" selected={selected === 'Playlists'}></Tab>
-          <Tab name="Команды" icon="ios-send" route="SendCommand" selected={selected === 'SendCommand'}></Tab>
-        </View>
+        <ScrollView contentContainerStyle={styles.scroll} horizontal={true} alwaysBounceHorizontal={false}>
+          <View style={styles.tabs}>
+            <Tab name="Пульт" icon="ios-radio" route="Dashboard" selected={selected === 'Dashboard'}></Tab>
+            <Tab name="Музыка" icon="ios-play-circle" route="Playlists" selected={selected === 'Playlists'}></Tab>
+            <Tab name="Команды" icon="ios-send" route="SendCommand" selected={selected === 'SendCommand'}></Tab>
+            <Tab name="Лог" icon="ios-bug" route="Log" selected={selected === 'Log'}></Tab>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
@@ -55,6 +50,10 @@ export default Footer;
 const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: '#ededed',
+  },
+  scroll: {
+    minWidth: '100%',
+    justifyContent: 'center',
   },
   tabs: {
     borderTopColor: '#e8e8e8',

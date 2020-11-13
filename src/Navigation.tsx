@@ -7,6 +7,8 @@ import Dashboard from './screens/Dashboard';
 import Playlists from './screens/Playlists';
 import Playlist from './screens/Playlist';
 import SendCommand from './screens/SendCommand';
+import Account from './screens/Account';
+import Log from './screens/Log';
 
 export type RootStackParamList = {
   Main: undefined;
@@ -17,6 +19,8 @@ export type RootStackParamList = {
     kind: number;
   },
   SendCommand: undefined,
+  Account: undefined,
+  Log: undefined,
 };
 
 const Stack = createStackNavigator();
@@ -56,6 +60,16 @@ function RootStack() {
         name="SendCommand"
         component={SendCommand}
         options={{ title: 'SendCommand' }}
+      />
+      <Stack.Screen
+        name="Account"
+        component={Account}
+        options={{ title: 'Account' }}
+      />
+      <Stack.Screen
+        name="Log"
+        component={Log}
+        options={{ title: 'Log' }}
       />
     </Stack.Navigator>
   );

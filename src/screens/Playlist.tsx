@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
+import { showMessage } from 'react-native-flash-message';
 
 import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
@@ -26,8 +27,6 @@ type State = {
   refreshing: boolean;
 };
 
-const yandexMusicApi = new YandexMusicApi();
-
 export class Playlist extends Component<PlaylistsProps> {
   state: State = {
     tracks: [],
@@ -49,7 +48,10 @@ export class Playlist extends Component<PlaylistsProps> {
           `Включи ${track.subtitle} - ${track.title}`,
         );
       } catch (e) {
-        console.log(e);
+        showMessage({
+          message: 'Не удалось воспроизвести трек',
+          type: 'danger',
+        });
       }
 
       return;
@@ -69,7 +71,7 @@ export class Playlist extends Component<PlaylistsProps> {
 
     const userId = state.account.id;
 
-    const tracks = await yandexMusicApi.getPlaylistTracks(userId, this.props.route.params.kind);
+    const tracks = await YandexMusicApi.getPlaylistTracks(userId, this.props.route.params.kind);
 
     this.setState({
       ...this.state,

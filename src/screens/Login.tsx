@@ -99,7 +99,7 @@ export class Login extends Component<LoginProps> {
       x_captcha_answer: undefined,
       token: token,
     });;
-    setState({ ...state, authToken: token, mainToken: mainToken });
+    setState({ authToken: token, mainToken: mainToken });
 
     await AccessTokenStorage.setToken(token);
     await AccessTokenStorage.setMainToken(mainToken);
