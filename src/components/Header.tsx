@@ -28,11 +28,20 @@ export class Header extends Component<HeaderProps> {
     try {
       YandexStationNetwork.init(devices);
     } catch (e) {
+      setState({ devices });
       showMessage({
         message: 'Не удалось подключиться к станции по сети',
         type: 'danger',
       });
+      return;
     }
+
+    showMessage({
+      message: 'Список станций обновлен',
+      type: 'none',
+      position: 'bottom',
+      floating: true,
+    });
 
     setState({ devices });
   }

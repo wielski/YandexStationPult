@@ -8,6 +8,7 @@ type Scenario = {
   id: string;
   name: string;
   deviceId: string;
+  icon: string;
 };
 
 type DeviceMap = {
@@ -59,10 +60,22 @@ class YandexStationNetwork {
             id: scenario.id,
             name: this.encodeUUID(quasarDevice.id),
             deviceId: quasarDevice.id,
+            icon: scenario.icon,
           };
         }
       }
     }
+  }
+
+  public async runScenario(scenarioId: string): Promise<boolean> {
+    const runReq = await this.post(`m/user/scenarios/${scenarioId}/actions`);
+    const runJson = await runReq.json();
+
+    if (runJson.status !== 'ok') {
+      return false;
+    }
+
+    return true;
   }
 
   public async sendCommand(deviceId: string, command: string, sayText?: boolean): Promise<boolean> {
@@ -107,6 +120,23 @@ class YandexStationNetwork {
     return true;
   }
 
+  public async loadScenarios(): Promise<Scenario[]> {
+    const req = await this.get('m/user/scenarios');
+    const json = await req.json();
+
+    if (!Array.isArray(json.scenarios)) {
+      return [];
+    }
+
+    return json.scenarios.map((scenario: Scenario) => {
+      return {
+        id: scenario.id,
+        name: scenario.name,
+        icon: scenario.icon,
+      };
+    });
+  }
+
   private async loadDevices(): Promise<DeviceMap[]> {
     const req = await this.get('m/user/devices');
     const json = await req.json();
@@ -131,22 +161,6 @@ class YandexStationNetwork {
     });
 
     return deviceMap;
-  }
-
-  private async loadScenarios(): Promise<Scenario[]> {
-    const req = await this.get('m/user/scenarios');
-    const json = await req.json();
-
-    if (!Array.isArray(json.scenarios)) {
-      return [];
-    }
-
-    return json.scenarios.map((scenario: Scenario) => {
-      return {
-        id: scenario.id,
-        name: scenario.name,
-      };
-    });
   }
 
   private async createEmptyScenario(deviceId: string): Promise<boolean> {

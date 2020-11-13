@@ -120,6 +120,7 @@ class DeviceProvider extends Component<DeviceProviderProps> {
         const appState = JSON.parse(appStateJson);
 
         if (appState && typeof appState === 'object' && appState.id) {
+          // console.log(appState);
           currentPlayingTrackId = appState.id;
         }
       } catch (e) {

@@ -3,9 +3,11 @@ import React, { Component } from 'react';
 import { StyleSheet, View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon } from 'native-base';
-import SeekBar from '../components/SeekBar';
 import { StackScreenProps } from '@react-navigation/stack';
 import { showMessage } from 'react-native-flash-message';
+
+import SeekBar from '../components/SeekBar';
+import VolumeControl from '../components/VolumeControl';
 
 import { RootStackParamList } from '../Navigation';
 import { useSharedState } from '../store';
@@ -14,6 +16,7 @@ import Header from '../components/Header';
 import YandexStation from '../Api/YandexStation';
 import YandexMusicApi from '../Api/YandexMusicApi';
 import YandexStationNetwork from '../Api/YandexStationNetwork';
+import PlayerStateStorage from '../Api/PlayerStateStorage';
 
 type Props = StackScreenProps<RootStackParamList, 'Dashboard'>;
 interface DashboardProps extends Props {
@@ -22,11 +25,13 @@ interface DashboardProps extends Props {
 
 type LocalState = {
   isPlaying: boolean;
+  volume: number;
 };
 
 export class Dashboard extends Component<DashboardProps> {
   state: LocalState = {
     isPlaying: false,
+    volume: 0,
   };
 
   constructor(props: DashboardProps) {
@@ -94,6 +99,19 @@ export class Dashboard extends Component<DashboardProps> {
       command: 'sendText',
       text: 'Вниз',
     });
+  }
+
+  public volume(volume: number): void {
+    if (this.sendByNetwork(`Громкость ${volume}`)) return;
+
+    YandexStation.sendCommand({
+      command: 'setVolume',
+      volume: volume / 10,
+    });
+
+    PlayerStateStorage.setVolume(volume);
+
+    this.setState({ ...this.state, volume });
   }
 
   public async like(id: number): Promise<void> {
@@ -206,6 +224,14 @@ export class Dashboard extends Component<DashboardProps> {
             <Icon style={styles.controlIcon} name="ios-arrow-down" />
           </Button>
         </View>
+        <View style={styles.volume}>
+          <VolumeControl
+            onSlidingStart={() => {}}
+            onSeek={this.volume.bind(this)}
+            maxVolume={10}
+            currentVolume={this.state.volume}
+          />
+        </View>
       </View>
     );
   }
@@ -283,6 +309,14 @@ export class Dashboard extends Component<DashboardProps> {
                     <Icon style={styles.controlIcon} name="ios-arrow-forward" />
                   </Button>
                 </View>
+                <View style={styles.volume}>
+                  <VolumeControl
+                    onSlidingStart={() => {}}
+                    onSeek={this.volume.bind(this)}
+                    maxVolume={10}
+                    currentVolume={this.state.volume}
+                  />
+                </View>
               </View>
             }
             {!currentPlaying.hasState && state.deviceStatus === 'connected' &&
@@ -292,6 +326,12 @@ export class Dashboard extends Component<DashboardProps> {
         </View>
       </SafeAreaView>
     );
+  }
+
+  componentDidMount(): void {
+    PlayerStateStorage.getVolume().then((volume) => {
+      this.setState({ ...this.state, volume });
+    });
   }
 }
 
@@ -400,5 +440,8 @@ const styles = StyleSheet.create({
     color: '#866332',
     fontSize: 11,
     textAlign: 'center',
+  },
+  volume: {
+    width: 200,
   },
 });

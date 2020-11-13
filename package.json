@@ -36,6 +36,7 @@
     "react-native-tcp-socket": "^4.5.4",
     "react-native-unimodules": "~0.11.0",
     "react-native-web": "~0.13.12",
+    "react-native-webview": "^10.10.2",
     "react-native-zeroconf": "^0.12.3",
     "react-tracked": "^1.4.2",
     "redux": "^4.0.5"

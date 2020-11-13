@@ -47,6 +47,13 @@ export class Playlist extends Component<PlaylistsProps> {
           state.selectedDevice.id,
           `Включи ${track.subtitle} - ${track.title}`,
         );
+
+        showMessage({
+          message: 'Отправлено на станцию',
+          type: 'none',
+          position: 'bottom',
+          floating: true,
+        });
       } catch (e) {
         showMessage({
           message: 'Не удалось воспроизвести трек',
@@ -61,6 +68,13 @@ export class Playlist extends Component<PlaylistsProps> {
       command: 'playMusic',
       id: String(track.id),
       type: 'track',
+    });
+
+    showMessage({
+      message: 'Отправлено на станцию',
+      type: 'none',
+      position: 'bottom',
+      floating: true,
     });
   }
 

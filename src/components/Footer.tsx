@@ -36,6 +36,7 @@ const Footer = (props: Props) => {
           <View style={styles.tabs}>
             <Tab name="Пульт" icon="ios-radio" route="Dashboard" selected={selected === 'Dashboard'}></Tab>
             <Tab name="Музыка" icon="ios-play-circle" route="Playlists" selected={selected === 'Playlists'}></Tab>
+            <Tab name="Мой дом" icon="ios-apps" route="Home" selected={selected === 'Home'}></Tab>
             <Tab name="Команды" icon="ios-send" route="SendCommand" selected={selected === 'SendCommand'}></Tab>
             <Tab name="Лог" icon="ios-bug" route="Log" selected={selected === 'Log'}></Tab>
           </View>
