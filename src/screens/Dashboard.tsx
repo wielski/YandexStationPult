@@ -244,7 +244,7 @@ export class Dashboard extends Component<DashboardProps> {
       <SafeAreaView>
         <View style={styles.dashboard}>
           <Header />
-          {state.deviceStatus === 'disconnected' ?
+          {state.deviceStatus !== 'connected' ?
             <View style={styles.disconnectedMessage}>
               <Text style={styles.disconnectedText}>
                 Не удалось подключиться к станции, приложение работает в урезанном режиме
@@ -252,7 +252,7 @@ export class Dashboard extends Component<DashboardProps> {
             </View>
           : null}
           <View style={styles.container}>
-            {state.deviceStatus === 'disconnected' ?
+            {state.deviceStatus !== 'connected' ?
               this.disconnectedControl()
             : null}
 
