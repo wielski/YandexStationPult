@@ -107,21 +107,19 @@ export class Header extends Component<HeaderProps> {
             <Button onPress={() => this.updateDevices()} transparent>
               <Icon style={styles.buttonIcon} name="ios-refresh" />
             </Button>
-            { state.info && state.info.uid &&
             <TouchableOpacity style={styles.account} onPress={() => {
               navigate('Account', {})
             }}>
-              { state.info.has_plus &&
+              { state.info && state.info.has_plus &&
                 <Image source={plus} style={styles.accountPlus}></Image>
               }
               <Image
                 style={styles.accountImage}
                 source={{
-                  uri: state.info.avatar_url,
+                  uri: state.info ? state.info.avatar_url : 'https://avatars.mds.yandex.net/get-yapic/0/0-0/islands-50',
                 }}
               />
             </TouchableOpacity>
-            }
           </View>
         </View>
       </View>

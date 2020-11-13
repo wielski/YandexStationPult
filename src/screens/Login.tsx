@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import CookieManager from '@react-native-community/cookies';
 
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { Item, Input, Button, Icon, Spinner } from 'native-base';
@@ -55,6 +56,8 @@ export class Login extends Component<LoginProps> {
   }
 
   async login(): Promise<void> {
+    await CookieManager.clearAll();
+
     this.setState({
       ...this.state,
       loading: true,
@@ -62,8 +65,12 @@ export class Login extends Component<LoginProps> {
 
     const {email, password, x_captcha_answer, x_captcha_key} = this.state;
 
+    console.log('login...');
     authApi.generateToken(email, password, x_captcha_answer, x_captcha_key).then(token => {
-      authApi.generateMainToken(email, password).then((mainToken => {
+      console.log(token);
+      console.log('generate main token...');
+      return authApi.generateMainToken(email, password).then((mainToken => {
+        console.log(mainToken);
         this.successLogin(token, mainToken);
       }));
     }).catch(error => {

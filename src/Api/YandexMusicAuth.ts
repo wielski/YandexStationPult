@@ -1,3 +1,5 @@
+import RNFetchBlob from 'rn-fetch-blob';
+
 type CaptchaBody = {
   x_captcha_url: string;
   x_captcha_key: string;
@@ -9,22 +11,25 @@ export class YandexMusicAuth {
   client_id = '23cabbbdc6cd418abb4b39c32c41195d';
   client_secret = '53bc75238f0c4d08a118e51fe9203300';
   headers = {
-    'User-Agent': 'com.yandex.mobile.auth.sdk/7.15.0.715001762'
+    'User-Agent': 'com.yandex.mobile.auth.sdk/5.151.60676 (Apple iPhone12,1; iOS 14.1)'
   };
 
   async generateMainToken(username: string, password: string) {
     const payload = {
       x_token_client_id: 'c0ebe342af7d48fbbbfcf2d2eedb8f9e',
       x_token_client_secret: 'ad0a908f0aa341a182a37ecd75bc319e',
-      client_id: 'f8cab64f154b4c8e96f92dac8becfcaa',
-      client_secret: '5dd2389483934f02bd51eaa749add5b2',
+      client_id: '23cabbbdc6cd418abb4b39c32c41195d',
+      client_secret: '53bc75238f0c4d08a118e51fe9203300',
       display_language: 'ru',
-      force_register: 'false',
-      is_phone_number: 'false',
+      payment_auth_retpath: 'yandexmusic://am/payment_auth',
       login: username,
     };
 
-    const response = await this.post('https://mobileproxy.passport.yandex.net/2/bundle/mobile/start/', payload, this.headers);
+    const response = await this.post(
+      'https://mobileproxy.passport.yandex.net/2/bundle/mobile/start/?app_id=ru.yandex.mobile.music&app_version_name=5.08&manufacturer=Apple&device_name=iPhone&app_platform=iPhone&model=iPhone12%2C1',
+      payload,
+      this.headers
+    );
     const json = await response.json();
 
     if (!json.track_id) throw new Error('cant process login');
@@ -119,6 +124,30 @@ export class YandexMusicAuth {
         resolve(resp);
       })
     });
+    //   return RNFetchBlob.config({
+    //     trusty : true
+    //   }).fetch(
+    //     'POST',
+    //     url,
+    //     headers,
+    //     this.serialize(data),
+    //   ).then((resp) => {
+    //     console.log(resp);
+    //     if (!resp.info().status) {
+    //       const json = resp.json();
+    //       let message = json.error_description || 'Unknown HTTP Error';
+  
+    //       if (message.includes('CAPTCHA')) {
+    //         return this.handleCaptcha(message, json);
+    //       } else {
+    //         throw new Error(message);
+    //       }
+    //     }
+  
+    //     return resp;
+    //   }).catch((e) => {
+    //     console.log(e);
+    //   });
   }
 }
 
