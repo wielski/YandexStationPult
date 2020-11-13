@@ -65,12 +65,8 @@ export class Login extends Component<LoginProps> {
 
     const {email, password, x_captcha_answer, x_captcha_key} = this.state;
 
-    console.log('login...');
     authApi.generateToken(email, password, x_captcha_answer, x_captcha_key).then(token => {
-      console.log(token);
-      console.log('generate main token...');
       return authApi.generateMainToken(email, password).then((mainToken => {
-        console.log(mainToken);
         this.successLogin(token, mainToken);
       }));
     }).catch(error => {

@@ -13,6 +13,9 @@ export class YandexMusicAuth {
   headers = {
     'User-Agent': 'com.yandex.mobile.auth.sdk/5.151.60676 (Apple iPhone12,1; iOS 14.1)'
   };
+  oauthHeaders = {
+    'User-Agent': 'com.yandex.mobile.auth.sdk/5.151.60676 (Apple iPhone12,1; iOS 14.1)',
+  };
 
   async generateMainToken(username: string, password: string) {
     const payload = {
@@ -103,51 +106,31 @@ export class YandexMusicAuth {
   };
 
   post(url: string, data: Record<string, any>, headers?: Record<string, string>): Promise<any> {
-    return fetch(url, {
-      method: 'POST',
-      body: this.serialize(data),
-      headers: headers,
-    }).then((resp) => {
-      if (!resp.ok) {
-        return resp.json().then(json => {
-          let message = json.error_description || 'Unknown HTTP Error';
+    const formData = Object.keys(data).map((key) => (
+      { name: key, data: data[key] }
+    ));
 
-          if (message.includes('CAPTCHA')) {
-            return this.handleCaptcha(message, json);
-          } else {
-            throw new Error(message);
-          }
-        });
+    return RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'POST',
+      url,
+      headers,
+      formData,
+    ).then((resp) => {
+      if (!resp.info().status) {
+        const json = resp.json();
+        let message = json.error_description || 'Unknown HTTP Error';
+
+        if (message.includes('CAPTCHA')) {
+          return this.handleCaptcha(message, json);
+        } else {
+          throw new Error(message);
+        }
       }
 
-      return new Promise((resolve, reject) => {
-        resolve(resp);
-      })
+      return resp;
     });
-    //   return RNFetchBlob.config({
-    //     trusty : true
-    //   }).fetch(
-    //     'POST',
-    //     url,
-    //     headers,
-    //     this.serialize(data),
-    //   ).then((resp) => {
-    //     console.log(resp);
-    //     if (!resp.info().status) {
-    //       const json = resp.json();
-    //       let message = json.error_description || 'Unknown HTTP Error';
-  
-    //       if (message.includes('CAPTCHA')) {
-    //         return this.handleCaptcha(message, json);
-    //       } else {
-    //         throw new Error(message);
-    //       }
-    //     }
-  
-    //     return resp;
-    //   }).catch((e) => {
-    //     console.log(e);
-    //   });
   }
 }
 

@@ -25,7 +25,9 @@ export class Home extends Component<HomeProps> {
           style={styles.webview}
           source={{ uri: 'https://yandex.ru/quasar/iot' }}
           javaScriptEnabled={true}
-          domStorageEnabled={true} />
+          domStorageEnabled={true}
+          thirdPartyCookiesEnabled={true}
+          sharedCookiesEnabled={true} />
       </SafeAreaView>
     );
   }

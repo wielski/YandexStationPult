@@ -28,7 +28,7 @@ export class Log extends Component<LogProps> {
 
     return (
       <SafeAreaView>
-        <ScrollView>
+        <ScrollView style={{ marginTop: 50 }}>
           { glagolLog.map((e, i) => (
             <Text key={`glagol${i}`}>{e}</Text>
           )) }

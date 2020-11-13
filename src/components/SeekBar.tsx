@@ -49,6 +49,7 @@ const SeekBar = ({
         minimumTrackTintColor="#000"
         maximumTrackTintColor="#ccc"
         thumbStyle={styles.thumb}
+        thumbTintColor="#fff"
         trackStyle={styles.track}
       />
     </View>

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { StyleSheet, View, Text, Image } from 'react-native';
+import { StyleSheet, View, Text, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon } from 'native-base';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -339,6 +339,8 @@ export default (props: Props) => {
   return <Dashboard sharedState={useSharedState()} {...props} />;
 };
 
+const windowHeight = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
   dashboard: {
     height: '100%',
@@ -362,8 +364,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 16.00,
     elevation: 24,
-    width: 200,
-    height: 200,
+    width: windowHeight > 800 ? 200 : 120,
+    height: windowHeight > 800 ? 200 : 120,
   },
   coverImage: {
     width: '100%',
