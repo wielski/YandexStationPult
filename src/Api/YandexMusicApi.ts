@@ -1,5 +1,6 @@
 import AccessTokenStorage from './AccessTokenStorage';
 import { Account, Track, Playlist } from '../models';
+import RNFetchBlob from 'rn-fetch-blob';
 
 const API_BASE_URL = 'https://api.music.yandex.net/';
 
@@ -84,41 +85,47 @@ class YandexMusicApi {
   private async post(path: string, payload: string): Promise<any> {
     const token = await AccessTokenStorage.getToken();
 
-    return fetch(`${API_BASE_URL}/${path}`, {
-      method: 'POST',
-      headers: {
+    return RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'POST',
+      `${API_BASE_URL}/${path}`,
+      {
         'Authorization': `OAuth ${token}`,
         'X-Yandex-Music-Client': 'YandexMusicAndroid',
         'User-Agent': 'Yandex-Music-API',
       },
-      body: payload,
-    }).then(async (resp) => {
-      if (resp.ok) {
+      payload,
+    ).then(async (resp) => {
+      if (resp.info().status === 200) {
         const json = await resp.json();
         return json.result;
       }
 
-      throw new Error(`Error ${resp.status}`);
+      throw new Error(`Error ${resp.info().status}`);
     });
   }
 
   private async get(path: string): Promise<any> {
     const token = await AccessTokenStorage.getToken();
 
-    return fetch(`${API_BASE_URL}/${path}`, {
-      method: 'GET',
-      headers: {
+    return RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'GET',
+      `${API_BASE_URL}/${path}`,
+      {
         'Authorization': `OAuth ${token}`,
         'X-Yandex-Music-Client': 'YandexMusicAndroid',
         'User-Agent': 'Yandex-Music-API',
       },
-    }).then(async (resp) => {
-      if (resp.ok) {
+    ).then(async (resp) => {
+      if (resp.info().status === 200) {
         const json = await resp.json();
         return json.result;
       }
 
-      throw new Error(`Error ${resp.status}`);
+      throw new Error(`Error ${resp.info().status}`);
     });
   }
 }

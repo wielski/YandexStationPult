@@ -191,6 +191,10 @@ export class Login extends Component<LoginProps> {
       </View>
     );
   }
+
+  componentDidMount(): void {
+    authApi.init();
+  }
 }
 
 export default (props: Props) => {

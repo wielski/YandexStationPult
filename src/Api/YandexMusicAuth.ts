@@ -17,6 +17,21 @@ export class YandexMusicAuth {
     'User-Agent': 'com.yandex.mobile.auth.sdk/5.151.60676 (Apple iPhone12,1; iOS 14.1)',
   };
 
+  async init() {
+    // fake requests to api to prevent slow auth
+    this.get(
+      'https://mobileproxy.passport.yandex.net/1/bundle/suggest/mobile_language/?language=ru',
+      {
+        ...this.headers,
+        'Ya-Client-Accept-Language': 'ru',
+      }
+    );
+
+    this.get(
+      'https://mobileproxy.passport.yandex.net/1/bundle/experiments/by_device_id/?app_id=ru.yandex.mobile.music&app_version_name=5.08&manufacturer=Apple&device_name=iPhone&app_platform=iPhone&model=iPhone12%2C1'
+    );
+  }
+
   async generateMainToken(username: string, password: string) {
     const payload = {
       x_token_client_id: 'c0ebe342af7d48fbbbfcf2d2eedb8f9e',
@@ -118,7 +133,7 @@ export class YandexMusicAuth {
       headers,
       formData,
     ).then((resp) => {
-      if (!resp.info().status) {
+      if (resp.info().status !== 200) {
         const json = resp.json();
         let message = json.error_description || 'Unknown HTTP Error';
 
@@ -129,6 +144,18 @@ export class YandexMusicAuth {
         }
       }
 
+      return resp;
+    });
+  }
+
+  get(url: string, headers?: Record<string, string>): Promise<any> {
+    return RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'GET',
+      url,
+      headers,
+    ).then((resp) => {
       return resp;
     });
   }

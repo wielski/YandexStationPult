@@ -70,6 +70,7 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_yandexio._tcp.</string>
+		<string>_linkplay._tcp.</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>To discover YandexStation devices in local network</string>

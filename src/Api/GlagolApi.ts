@@ -1,6 +1,7 @@
 import Zeroconf from 'react-native-zeroconf';
 import AccessTokenStorage from './AccessTokenStorage';
 import { Device } from '../models';
+import RNFetchBlob from 'rn-fetch-blob';
 
 const GLAGOL_API_BASE_URL = 'https://quasar.yandex.net/glagol';
 
@@ -30,6 +31,7 @@ class GlagolApi {
     zeroconf.on('error', err => {
       console.log('[Zeroconf Error]', err);
       zeroconf.stop();
+      zeroconf.removeDeviceListeners();
 
       zeroconfErrorsLog.push(String(err));
     });
@@ -61,14 +63,17 @@ class GlagolApi {
       throw new Error('No token provided');
     }
 
-    return fetch(`${GLAGOL_API_BASE_URL}/device_list`, {
-      method: 'GET',
-      headers: {
+    return RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'GET',
+      `${GLAGOL_API_BASE_URL}/device_list`,
+      {
         'Authorization': `Oauth ${token}`,
         'Content-Type': 'application/json',
-      },
-    }).then(async (resp) => {
-      if (resp.ok) {
+      }
+    ).then(async (resp) => {
+      if (resp.info().status == 200) {
         const json = await resp.json();
 
         if (json && json.devices && Array.isArray(json.devices) && json.devices.length > 0) {
@@ -79,7 +84,7 @@ class GlagolApi {
         throw new Error('No devices found');
       }
 
-      errorsLog.push('Cant load device list: ' + resp.status);
+      errorsLog.push('Cant load device list: ' + resp.info().status);
       throw new Error('Cant load device list');
     }).then((devices): Device[] => {
       return Promise.all(devices.map(async (device: Device) => {
@@ -108,14 +113,17 @@ class GlagolApi {
   async getDeviceToken(device: Device): Promise<string> {
     const token = await AccessTokenStorage.getToken();
 
-    return fetch(`${GLAGOL_API_BASE_URL}/token?device_id=${device.id}&platform=${device.platform}`, {
-      method: 'GET',
-      headers: {
+    return RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'GET',
+      `${GLAGOL_API_BASE_URL}/token?device_id=${device.id}&platform=${device.platform}`,
+      {
         'Authorization': `Oauth ${token}`,
         'Content-Type': 'application/json',
-      },
-    }).then(async (resp) => {
-      if (resp.ok) {
+      }
+    ).then(async (resp) => {
+      if (resp.info().status) {
         const json = await resp.json();
 
         if (json && json.token) {
@@ -126,7 +134,7 @@ class GlagolApi {
         throw new Error('No token found');
       }
 
-      errorsLog.push('No token found for device: ' + resp.status);
+      errorsLog.push('No token found for device: ' + resp.info().status);
       throw new Error('Cant load token');
     });
   }
@@ -137,6 +145,7 @@ class GlagolApi {
       const localDevices: LocalDevice[] = [];
 
       if (deviceIds.length === 0) {
+        errorsLog.push('Device ids is empty');
         resolve([]);
         return;
       }
@@ -151,6 +160,7 @@ class GlagolApi {
           if (deviceIds.length === 0) {
             resolve(localDevices);
             zeroconf.stop();
+            zeroconf.removeDeviceListeners();
           }
         } else if(localDevice.name) {
           const id = localDevice.name.replace(/YandexIOReceiver-/g, '');
@@ -164,30 +174,40 @@ class GlagolApi {
             if (deviceIds.length === 0) {
               resolve(localDevices);
               zeroconf.stop();
+              zeroconf.removeDeviceListeners();
             }
           }
         }
       });
 
-      this.startScanning();
+      this.startScanning('yandexio').then(() => {
+        if (deviceIds.length > 0) {
+          this.startScanning('linkplay'); // support for irbis
+        }
+      });
 
       setTimeout(() => {
         resolve(localDevices);
         zeroconf.stop();
-      }, 5000);
+        zeroconf.removeDeviceListeners();
+      }, 6000);
     });
   }
 
-  startScanning(): void {
-    zeroconf.scan('yandexio', 'tcp', 'local.');
+  startScanning(service: string): Promise<void> {
+    return new Promise((resolve) => {
+      zeroconf.scan(service, 'tcp', 'local.');
 
-    if (this.zeroconfTimeout) {
-      clearTimeout(this.zeroconfTimeout);
-    }
-
-    this.zeroconfTimeout = setTimeout(() => {
-      zeroconf.stop();
-    }, 5000);
+      if (this.zeroconfTimeout) {
+        clearTimeout(this.zeroconfTimeout);
+      }
+  
+      this.zeroconfTimeout = setTimeout(() => {
+        zeroconf.stop();
+        zeroconf.removeDeviceListeners();
+        resolve();
+      }, 3000);
+    });
   }
 }
 

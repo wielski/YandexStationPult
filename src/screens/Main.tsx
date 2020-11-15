@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import RNFetchBlob from 'rn-fetch-blob';
 
 import { StyleSheet, View } from 'react-native';
 import { Spinner } from 'native-base';
@@ -7,15 +8,20 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../Navigation';
 
 import AccessTokenStorage from '../Api/AccessTokenStorage';
+import AccountStorage from '../Api/AccountStorage';
+
 import { useSharedState } from '../store';
 import YandexMusicApi from '../Api/YandexMusicApi';
 
 import { AccountInfo } from '../models';
+import { YandexMusicAuth } from '../Api/YandexMusicAuth';
 
 type Props = StackScreenProps<RootStackParamList, 'Main'>;
 interface MainProps extends Props {
   sharedState: ReturnType<typeof useSharedState>,
 };
+
+const authApi = new YandexMusicAuth();
 
 export class Main extends Component<MainProps> {
   constructor(props: MainProps) {
@@ -23,17 +29,29 @@ export class Main extends Component<MainProps> {
   }
 
   public async getAccountInfo(): Promise<AccountInfo> {
+    const accountInfo = await AccountStorage.getAccountInfo();
+
+    if (accountInfo) {
+      return accountInfo;
+    }
+
     const token = await AccessTokenStorage.getMainToken();
 
-    const response = await fetch('https://mobileproxy.passport.yandex.net/1/bundle/account/short_info?avatar_size=islands-200', {
-      method: 'GET',
-      headers: {
+    const response = await RNFetchBlob.config({
+      trusty: true
+    }).fetch(
+      'GET',
+      'https://mobileproxy.passport.yandex.net/1/bundle/account/short_info?avatar_size=islands-200',
+      {
         'Ya-Consumer-Authorization': `OAuth ${token}`
       },
-    });
+    );
 
-    if (response.ok) {
+    if (response.info().status === 200) {
       const json = await response.json();
+
+      AccountStorage.setAccountInfo(json);
+
       return json;
     }
 
@@ -74,6 +92,8 @@ export class Main extends Component<MainProps> {
 
         if (!checkProfile) {
           AccessTokenStorage.removeToken();
+          AccessTokenStorage.removeMainToken();
+          AccountStorage.removeAccountInfo();
 
           navigation.reset({
             index: 0,
@@ -107,6 +127,7 @@ export class Main extends Component<MainProps> {
 
   componentDidMount() {
     this.processLogin();
+    authApi.init();
   }
 }
 

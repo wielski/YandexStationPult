@@ -427,7 +427,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   noPlaying: {
-    marginTop: 100,
     alignItems: 'center',
   },
   disconnectedMessage: {

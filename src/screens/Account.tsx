@@ -7,7 +7,9 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../Navigation';
 
 import { useSharedState } from '../store';
+
 import AccessTokenStorage from '../Api/AccessTokenStorage';
+import AccountStorage from '../Api/AccountStorage';
 
 type Props = StackScreenProps<RootStackParamList, 'Log'>;
 interface AccountProps extends Props {
@@ -24,8 +26,9 @@ export class Account extends Component<AccountProps> {
   public async logout(): Promise<void> {
     const navigation = this.props.navigation;
 
-    await AccessTokenStorage.removeToken;
+    await AccessTokenStorage.removeToken();
     await AccessTokenStorage.removeMainToken();
+    await AccountStorage.removeAccountInfo();
 
     navigation.reset({
       index: 0,

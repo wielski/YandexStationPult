@@ -1,4 +1,5 @@
 import CookieManager from '@react-native-community/cookies';
+import RNFetchBlob from 'rn-fetch-blob';
 import AccessTokenStorage from './AccessTokenStorage';
 import { Device } from '../models';
 
@@ -193,16 +194,19 @@ class YandexStationNetwork {
   }
 
   private async getCSRFToken(): Promise<string> {
-    const req = () => fetch(`https://yandex.ru/quasar/iot`, {
-      method: 'GET',
-    }).then(async (resp) => {
-      const cookie = resp.headers.get('Set-Cookie');
+    const req = () => RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'GET',
+      'https://yandex.ru/quasar/iot',
+    ).then(async (resp) => {
+      const cookie = resp.info().headers['set-cookie'];
   
       if (cookie) {
         await CookieManager.setFromResponse(API_BASE_URL, cookie);
       }
 
-      if (resp.ok) {
+      if (resp.info().status === 200) {
         const text = await resp.text();
         const match = text.match(/"csrfToken2":"(.+?)"/);
 
@@ -227,19 +231,22 @@ class YandexStationNetwork {
     await CookieManager.clearAll();
 
     // auth
-    const payload = {
-      type: 'x-token',
-      retpath: 'https://www.yandex.ru/androids.txt',
-    };
+    const payload = [
+      { name: 'type', data: 'x-token' },
+      { name: 'retpath', data: 'https://www.yandex.ru/androids.txt' },
+    ];
     const headers = {
       'Ya-Consumer-Authorization': `OAuth ${token}`,
     };
 
-    const response = await fetch('https://mobileproxy.passport.yandex.net/1/bundle/auth/x_token/', {
-      method: 'POST',
+    const response = await RNFetchBlob.config({
+      trusty : true
+    }).fetch(
+      'POST',
+      'https://mobileproxy.passport.yandex.net/1/bundle/auth/x_token/',
       headers,
-      body: this.serializeQuery(payload),
-    });
+      payload,
+    );
 
     const resp = await response.json();
 
@@ -247,11 +254,14 @@ class YandexStationNetwork {
     if (resp.status === 'ok' && resp.passport_host) {
       const host = resp.passport_host;
 
-      const authResponse = await fetch(`${host}/auth/session/?track_id=${resp.track_id}`, {
-        method: 'GET',
-      });
+      const authResponse = await RNFetchBlob.config({
+        trusty : true
+      }).fetch(
+        'GET',
+        `${host}/auth/session/?track_id=${resp.track_id}`
+      );
 
-      const authCookie = authResponse.headers.get('Set-Cookie');
+      const authCookie = authResponse.info().headers['set-cookie'];
   
       if (authCookie) {
         return true;
@@ -280,24 +290,28 @@ class YandexStationNetwork {
     return this.req('PUT', path, payload);
   }
 
-  private async req(method: string, path: string, payload?: object): Promise<any> {
-    const request: Record<string, any> = {};
+  private async req(method: 'GET' | 'POST' | 'PUT', path: string, payload?: object): Promise<any> {
+    const headers: Record<string, string> = {};
 
     if (method !== 'GET') {
-      request.headers = {
-        'x-csrf-token': await this.getCSRFToken(),
-      };
+      headers['x-csrf-token'] = await this.getCSRFToken();
     }
+
+    let stringPayload: string | undefined = undefined;
 
     if (payload) {
-      request.body = JSON.stringify(payload);
+      stringPayload = JSON.stringify(payload);
     }
 
-    const sendRequest = async () => fetch(`${API_BASE_URL}${path}`, {
+    const sendRequest = async () => RNFetchBlob.config({
+      trusty : true
+    }).fetch(
       method,
-      ...request,
-    }).then(async (resp) => {
-      if (resp.ok) {
+      `${API_BASE_URL}${path}`,
+      headers,
+      stringPayload,
+    ).then(async (resp) => {
+      if (resp.info().status === 200) {
         return resp;
       }
 
@@ -305,7 +319,7 @@ class YandexStationNetwork {
     });
 
     return sendRequest().catch(async (e) => {
-      if (e.status === 401) {
+      if (e.info().status === 401) {
         const loggedIn = await this.loginByToken();
 
         if (loggedIn) {
@@ -313,29 +327,9 @@ class YandexStationNetwork {
         }
       }
 
-      errorsLog.push('Request error: ' + e.status);
-      throw new Error(`Error ${e.status}`);
+      errorsLog.push('Request error: ' + e.info().status);
+      throw new Error(`Error ${e.info().status}`);
     });
-  }
-
-  private serializeQuery(params: Record<string, any>, prefix?: string): string {
-    const query = Object.keys(params).map((key) => {
-      const value  = params[key];
-
-      if (params.constructor === Array) {
-        key = `${prefix}[]`;
-      } else if (params.constructor === Object) {
-        key = (prefix ? `${prefix}[${key}]` : key);
-      }
-
-      if (typeof value === 'object') {
-        return this.serializeQuery(value, key);
-      } else {
-        return `${key}=${encodeURIComponent(value)}`;
-      }
-    });
-
-    return ([] as string[]).concat.apply([], query).join('&');
   }
 }
 
